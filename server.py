@@ -1,4 +1,5 @@
 import socket
+from queue import Queue
 
 from main import Game, Action
 from utils import Thread
@@ -18,22 +19,24 @@ class Server:
         self.thread = Thread(self.loop)
 
         # game related stuff
-        self.actions = []
+        self.actions_to_local = Queue()
+        self.actions_to_remote = Queue()
 
 
     def add_actions(self, actions):
         for a in actions:
-            self.actions.append({'player': 0, 'action': a})
-
-    def get_all_actions(self):
-        return self.actions
+            self.actions_to_local.put({'player': 0, 'action': a})
+            self.actions_to_remote.put({'player': 0, 'action': a})
 
     def quit(self):
         print("quit initialized")
         for c in self.clients:
             self.sock.sendto(b'exit', c)
-        self.alive = False
-        self.thread.join()
+        if self.alive:
+            self.alive = False
+            self.actions_to_local.shutdown()
+            self.actions_to_remote.shutdown()
+            self.thread.join()
         print("quit success")
 
     def send(self, data: bytes):
@@ -50,30 +53,40 @@ class Server:
         data = self.recv()
         return data.decode('utf-8')
 
-    def loop(self):        
-        self.sock.bind((self.host, self.port))
+    def loop(self):
+        try:
+            self.sock.bind((self.host, self.port))
 
-        while self.alive:
-            self.actions = []
-            try:
-                data, addr = self.sock.recvfrom(1024)
-            except TimeoutError:
-                continue
+            while self.alive:
+                try:
+                    data, addr = self.sock.recvfrom(1024)
+                except TimeoutError:
+                    continue
 
-            if data == b'connect':
-                self.clients.append(addr)
-                self.sock.sendto('OK'.encode('utf-8'), addr)
-                self.actions.append({'player': len(self.clients), 'action': Action.CONNECT})
-                print(f'Client {addr} connected')
-            elif data == b'exit':
-                self.clients.remove(addr)
-                print('Client', addr, 'disconnected')
-            else:
-                print('Received', addr, data)
-                if data == b'exit': break
-                self.sock.sendto(data, addr)
-            
+                if data == b'connect':
+                    self.clients.append(addr)
+                    self.sock.sendto('OK'.encode('utf-8'), addr)
+                    self.actions_to_local.put({'player': len(self.clients), 'action': Action.CONNECT})
+                    print(f'Client {addr} connected')
+                elif data == b'exit':
+                    self.actions_to_local.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT})
+                    self.clients.remove(addr)
+                    print('Client', addr, 'disconnected')
+                else:
+                    try:
+                        action = int(data.decode('utf-8'))
+                        action = {'player': self.clients.index(addr), 'action': Action(action)}
+                        print('Added', action)
+                        self.actions_to_local.put(action)
+                    except Exception as e:
+                        print("Exception...", e, data)
+        except KeyboardInterrupt:
+            self.alive = False
+            raise
 
 s = Server()
 game = Game(s)
-draw_thread = Thread(game.main)
+try:
+    game.main()
+except KeyboardInterrupt:
+    game.quit()

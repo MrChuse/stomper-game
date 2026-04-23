@@ -1,4 +1,6 @@
 import socket
+import queue
+from queue import Queue
 
 from utils import Thread
 from main import Game
@@ -15,19 +17,20 @@ class Client():
         self.thread = Thread(self.loop)
 
         # game related stuff
-        self.actions = []
+        self.actions_to_local = Queue()
+        self.actions_to_remote = Queue()
     
     def add_actions(self, actions):
         for a in actions:
-            self.actions.append({'player': 0, 'action': a})
-
-    def get_all_actions(self):
-        return self.actions
+            self.actions_to_local.put({'player': 0, 'action': a})
+            self.actions_to_remote.put({'player': 0, 'action': a})
     
     def quit(self):
         print('quit initialized')
         self.sendstr('exit')
         self.alive = False
+        self.actions_to_local.shutdown()
+        self.actions_to_remote.shutdown()
         self.thread.join()
         print('quit success')
 
@@ -58,10 +61,11 @@ class Client():
             print('Connection established')
         
         while self.alive:
-            actions_copy = self.actions.copy()
-            self.actions = []
-            for action in actions_copy:
-                self.sendstr(str(action['action'].value))
+            try:
+                action = self.actions_to_remote.get()
+            except queue.ShutDown:
+                return
+            self.sendstr(str(action['action'].value))
             try:
                 data = self.recvstr()
             except TimeoutError:
