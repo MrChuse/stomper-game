@@ -1,22 +1,74 @@
 import socket
 
-import pygame
-import pygame.draw
-
 from utils import Thread
-from main import main
+from main import Game
 
-def client():
-    HOST = 'localhost'    # The remote host
-    PORT = 50007          # The same port as used by the server
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-        msg = input()
-        while msg != 'exit':
-            s.sendto(msg.encode('utf-8'), (HOST, PORT))
-            data, addr = s.recvfrom(1024)
-            print('Received', repr(data))
-            msg = input()
-        s.sendto(msg.encode('utf-8'), (HOST, PORT))
+class Client():
+    def __init__(self):
+        self.host = 'localhost' # The remote host
+        self.port = 50007       # The same port as used by the server
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(1/60)
 
-Thread(client)
-Thread(main)
+        # threading
+        self.alive = True
+        self.thread = Thread(self.loop)
+
+        # game related stuff
+        self.actions = []
+    
+    def add_actions(self, actions):
+        for a in actions:
+            self.actions.append({'player': 0, 'action': a})
+
+    def get_all_actions(self):
+        return self.actions
+    
+    def quit(self):
+        print('quit initialized')
+        self.sendstr('exit')
+        self.alive = False
+        self.thread.join()
+        print('quit success')
+
+    def send(self, data: bytes):
+        print('Send:', data, '->', (self.host, self.port))
+        self.sock.sendto(data, (self.host, self.port))
+
+    def sendstr(self, s: str):
+        self.send(s.encode('utf-8'))
+
+    def recv(self):
+        data, addr = self.sock.recvfrom(1024)
+        print('Recv', data, '<-', addr)
+        return data
+
+    def recvstr(self):
+        data = self.recv()
+        return data.decode('utf-8')
+
+    def loop(self):
+        self.sendstr('connect')
+        try:
+            res = self.recvstr()
+        except ConnectionResetError:
+            print('Cant find the server')
+            return
+        if res == 'OK':
+            print('Connection established')
+        
+        while self.alive:
+            actions_copy = self.actions.copy()
+            self.actions = []
+            for action in actions_copy:
+                self.sendstr(str(action['action'].value))
+            try:
+                data = self.recvstr()
+            except TimeoutError:
+                continue
+            if data == 'exit': break
+            
+
+c = Client()
+game = Game(c)
+Thread(game.main)
