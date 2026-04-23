@@ -70,10 +70,11 @@ class Client():
                     self.quit()
                     break
                 try:
-                    player, action = data.split(' ')
+                    player, action, *params = data.split(' ')
                     player = int(player)
                     action = int(action)
-                    self.actions_to_local.put({'player': player, 'action': Action(action)})
+                    params = list(map(int, params))
+                    self.actions_to_local.put({'player': player, 'action': Action(action), 'params': params})
                 except Exception as e:
                     print("Exception...", e, data)
 
@@ -90,5 +91,5 @@ class Client():
             
 
 c = Client()
-game = Game(c)
+game = Game(c, False)
 Thread(game.main)

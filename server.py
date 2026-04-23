@@ -68,7 +68,7 @@ class Server:
                         self.clients.append(addr)
                         self.sock.sendto('OK'.encode('utf-8'), addr)
                         self.actions_to_local.put({'player': len(self.clients), 'action': Action.CONNECT})
-                        self.actions_to_remote.put({'player': len(self.clients), 'action': Action.CONNECT})
+                        # self.actions_to_remote.put({'player': len(self.clients), 'action': Action.CONNECT})
                         print(f'Client {addr} connected')
                     elif data == b'exit':
                         self.actions_to_local.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT})
@@ -95,7 +95,9 @@ class Server:
                 pass
             else:
                 for addr in self.clients:
-                    self.sock.sendto(f"{action['player']} {action['action'].value}".encode('utf-8'), addr)
+                    print(action)
+                    l = map(str, (action['player'], action['action'].value, *action.get('params', [])))
+                    self.sock.sendto(' '.join(l).encode('utf-8'), addr)
 
 
 
