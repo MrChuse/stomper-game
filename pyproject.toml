@@ -1,0 +1,7 @@
+[project]
+name = "stomper-game"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "pygame-gui>=0.6.14",
+]
