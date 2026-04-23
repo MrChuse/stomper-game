@@ -3,7 +3,7 @@ import queue
 from queue import Queue
 
 from utils import Thread
-from main import Game
+from main import Game, Action
 
 class Client():
     def __init__(self):
@@ -22,8 +22,8 @@ class Client():
     
     def add_actions(self, actions):
         for a in actions:
-            self.actions_to_local.put({'player': 0, 'action': a})
-            self.actions_to_remote.put({'player': 0, 'action': a})
+            # self.actions_to_local.put({'player': 0, 'action': a})
+            self.actions_to_remote.put(a)
     
     def quit(self):
         print('quit initialized')
@@ -62,15 +62,31 @@ class Client():
         
         while self.alive:
             try:
-                action = self.actions_to_remote.get()
-            except queue.ShutDown:
-                return
-            self.sendstr(str(action['action'].value))
-            try:
                 data = self.recvstr()
             except TimeoutError:
-                continue
-            if data == 'exit': break
+                pass
+            else:
+                if data == 'exit': 
+                    self.quit()
+                    break
+                try:
+                    player, action = data.split(' ')
+                    player = int(player)
+                    action = int(action)
+                    self.actions_to_local.put({'player': player, 'action': Action(action)})
+                except Exception as e:
+                    print("Exception...", e, data)
+
+            try:
+                action = self.actions_to_remote.get(False)
+            except queue.ShutDown:
+                return
+            except queue.Empty:
+                pass
+            else:
+                print(f'Sending action {action}')
+                self.sendstr(str(action.value))
+            
             
 
 c = Client()
