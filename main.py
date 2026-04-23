@@ -6,13 +6,13 @@ import queue
 import pygame
 import pygame.draw
 
-from utils import Thread
+from utils import Thread, Connection
 
 @dataclass
 class Player:
     x: float
     y: float
-    color: pygame.color.ColorLike
+    color: pygame.color
 
 class Action(Enum):
     RIGHT = 0
@@ -28,31 +28,25 @@ def random_color():
 def random_player():
     return Player(randint(0, WIDTH-1-SIZE), randint(0, HEIGHT-1-SIZE), random_color())
 
-WIDTH = 1280
-HEIGHT = 720
+WIDTH = 480
+HEIGHT = 360
 SIZE = 30
 class Game:
-    def __init__(self, connection, is_server=True):
-        self.connection = connection
-        self.running = True
+    def __init__(self, is_server=True):
         self.state: list[Player] = []
-        self.update_thread = Thread(self.update)
         self.is_server = is_server
     
-    def update(self):
-        while self.running:
-            try:
-                action = self.connection.actions_to_local.get()
-            except queue.ShutDown:
-                return
-            # action handling
+    def update(self, actions):
+        outgoing_actions = []
+
+        for action in actions:
             p_id = action['player']
             if p_id < 0 or p_id >= len(self.state):
                 if action['action'] is Action.CONNECT:
                     if self.is_server:
                         p = random_player()
                         self.state.append(p)
-                        self.connection.add_actions([{'player': p_id, 'action': Action.CONNECT, 'params': [p.x, p.y, p.color.r, p.color.g, p.color.b]}])
+                        outgoing_actions.append({'player': p_id, 'action': Action.CONNECT, 'params': [p.x, p.y, p.color.r, p.color.g, p.color.b]})
                     else:
                         params = action.get('params')
                         if params:
@@ -74,50 +68,44 @@ class Game:
                 p.y += 1
             if action is Action.DISCONNECT:
                 self.state.pop(p_id)
-                
-    def quit(self):
-        self.running = False
-        pygame.quit()
-        self.connection.quit()
 
-    def main(self):
+class Artist:
+    def __init__(self) -> None:
+
         # pygame setup
         pygame.init()
-        screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        clock = pygame.time.Clock()
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.clock = pygame.time.Clock()
 
-        while self.running:
-            # events and actions
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
+    def draw(self, state):
+        # draw
+        self.screen.fill('black')
 
-            if not self.is_server:
-                this_tick_actions = []
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_LEFT]:
-                    this_tick_actions.append(Action.LEFT)
-                if keys[pygame.K_RIGHT]:
-                    this_tick_actions.append(Action.RIGHT)
-                if keys[pygame.K_UP]:
-                    this_tick_actions.append(Action.UP)
-                if keys[pygame.K_DOWN]:
-                    this_tick_actions.append(Action.DOWN)
-                self.connection.add_actions(this_tick_actions)
-            
-            # draw
-            screen.fill('black')
+        for p in state:
+            pygame.draw.rect(self.screen, p.color, (p.x,p.y,SIZE,SIZE))
 
-            # print(state)
-            for p in self.state:
-                pygame.draw.rect(screen, p.color, (p.x,p.y,SIZE,SIZE))
+        # flip() the display to put your work on screen
+        pygame.display.flip()
+        
+        # events and actions
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
 
-            # flip() the display to put your work on screen
-            pygame.display.flip()
+            this_tick_actions = []
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT]:
+                this_tick_actions.append(Action.LEFT)
+            if keys[pygame.K_RIGHT]:
+                this_tick_actions.append(Action.RIGHT)
+            if keys[pygame.K_UP]:
+                this_tick_actions.append(Action.UP)
+            if keys[pygame.K_DOWN]:
+                this_tick_actions.append(Action.DOWN)
+        return this_tick_actions
 
-            clock.tick(60)  # limits FPS to 60
+    def quit(self):
+        pygame.quit()
 
-        self.quit()
-
-    if __name__ == '__main__':
-        main()
+if __name__ == '__main__':
+    main()
