@@ -47,7 +47,7 @@ class Game:
                 if len(action['state']) % 5 != 0:
                     print("State was transferred wrong probably")
                     continue
-                self.state = []
+                self.state.clear()
                 for b in itertools.batched(action['state'], 5):
                     b = list(map(int, b))
                     self.state.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))

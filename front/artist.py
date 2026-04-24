@@ -4,7 +4,8 @@ import pygame
 from core import Action, WIDTH, HEIGHT, SIZE
 
 class Artist(BaseViewPygame):
-    def __init__(self, screen=None) -> None:
+    def __init__(self, screen=None, state=None) -> None:
+        self.state = state
         if screen is None:
             pygame.init()
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -13,33 +14,31 @@ class Artist(BaseViewPygame):
             self.screen = screen
             self.created_screen = False
         self.running = True
+        self.this_tick_actions = []
 
-    def draw(self, state):
-        # print('draw')
+    def show(self):
         self.screen.fill('black')
 
-        for p in state:
+        for p in self.state:
             pygame.draw.rect(self.screen, p.color, (p.x,p.y,SIZE,SIZE))
 
-        # flip() the display to put your work on screen
         pygame.display.flip()
-        
-        # events and actions
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
 
-        this_tick_actions = []
+        self.this_tick_actions = []
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            this_tick_actions.append(Action.LEFT)
+            self.this_tick_actions.append(Action.LEFT)
         if keys[pygame.K_RIGHT]:
-            this_tick_actions.append(Action.RIGHT)
+            self.this_tick_actions.append(Action.RIGHT)
         if keys[pygame.K_UP]:
-            this_tick_actions.append(Action.UP)
+            self.this_tick_actions.append(Action.UP)
         if keys[pygame.K_DOWN]:
-            this_tick_actions.append(Action.DOWN)
-        return this_tick_actions
+            self.this_tick_actions.append(Action.DOWN)
+
+    def process_event(self, event):
+        super().process_event(event)
+        if event.type == pygame.QUIT:
+            self.running = False
 
     def quit(self):
         if self.created_screen:

@@ -12,20 +12,23 @@ class GameServerArtist:
         self.connection.clients.append('local') # bad
         self.game = Game(True)
         self.game.create_random_player()
-        self.artist = Artist(screen)
+        self.artist = Artist(screen, self.game.state)
 
         self.clock = pygame.time.Clock()
         self.running = True
 
     def update(self):
         try:
-            state = self.game.state
-            actions_to_remote = self.artist.draw(state)
+            self.artist.show()
             if self.artist.running is False:
                 self.artist.quit()
                 self.connection.quit()
                 self.running = False
                 return
+
+            for event in pygame.event.get():
+                self.artist.process_event(event)
+            actions_to_remote = self.artist.this_tick_actions
 
             for a in actions_to_remote:
                 self.connection.actions_to_local.put({'player': 0, 'action': a})
@@ -38,8 +41,6 @@ class GameServerArtist:
                     actions_to_local.append(action)
                 except queue.Empty:
                     break
-
-                
 
             actions_to_remote = self.game.update(actions_to_local)
             for a in actions_to_remote:
