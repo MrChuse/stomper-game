@@ -6,12 +6,12 @@ from core import Game, Artist
 from server import Server
 
 class GameServerArtist:
-    def __init__(self):
-        self.connection = Server()
+    def __init__(self, host='', screen=None):
+        self.connection = Server(host)
         self.connection.clients.append('local') # bad
         self.game = Game(True)
         self.game.create_random_player()
-        self.artist = Artist()
+        self.artist = Artist(screen)
 
         self.clock = pygame.time.Clock()
         self.running = True
@@ -57,5 +57,6 @@ class GameServerArtist:
         while self.running:
             self.update()
 
-gsa = GameServerArtist()
-gsa.loop()
+if __name__ == '__main__':
+    gsa = GameServerArtist()
+    gsa.loop()

@@ -8,9 +8,9 @@ class Thread(threading.Thread):
         self.start()
 
 class Connection:
-    def __init__(self):
-        self.host = 'localhost' # The remote host
-        self.port = 50007       # The same port as used by the server
+    def __init__(self, host='', port=50007):
+        self.host = host
+        self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(1/60)
 

@@ -4,8 +4,8 @@ from core import Action
 from utils import Connection
 
 class Server(Connection):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, host='', port=50007):
+        super().__init__(host, port)
         self.clients = []
 
     def quit(self):

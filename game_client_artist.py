@@ -6,9 +6,9 @@ from core import Game, Artist
 from client import Client
 
 class GameClientArtist:
-    def __init__(self):
-        self.artist = Artist()
-        self.connection = Client()
+    def __init__(self, host='localhost', screen=None):
+        self.artist = Artist(screen)
+        self.connection = Client(host)
         self.game = Game(False)
 
         self.clock = pygame.time.Clock()
@@ -29,6 +29,9 @@ class GameClientArtist:
                     actions_to_local.append(action)
                 except queue.Empty:
                     break
+                except queue.ShutDown:
+                    self.quit()
+                    return
             
             actions = self.game.update(actions_to_local)
             actions_to_remote.extend(actions)
@@ -49,5 +52,6 @@ class GameClientArtist:
         while self.running:
             self.update()
 
-gca = GameClientArtist()
-gca.loop()
+if __name__ == '__main__':
+    gca = GameClientArtist()
+    gca.loop()

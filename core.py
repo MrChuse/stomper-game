@@ -81,9 +81,14 @@ class Game:
         return " ".join(l).encode()
 
 class Artist:
-    def __init__(self) -> None:
-        pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    def __init__(self, screen=None) -> None:
+        if screen is None:
+            pygame.init()
+            self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            self.created_screen = True
+        else:
+            self.screen = screen
+            self.created_screen = False
         self.running = True
 
     def draw(self, state):
@@ -114,4 +119,5 @@ class Artist:
         return this_tick_actions
 
     def quit(self):
-        pygame.quit()
+        if self.created_screen:
+            pygame.quit()

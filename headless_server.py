@@ -40,5 +40,6 @@ class GameServerHeadless:
         while self.running:
             self.update()
 
-gsh = GameServerHeadless()
-gsh.loop()
+if __name__ == '__main__':
+    gsh = GameServerHeadless()
+    gsh.loop()
