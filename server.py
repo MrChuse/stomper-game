@@ -1,58 +1,19 @@
-import socket
 import queue
-from queue import Queue
 
-from main import Game, Action
-from utils import Thread
+from main import Action
+from utils import Connection
 
-class Server:
+class Server(Connection):
     def __init__(self):
-        self.host = ''    # Symbolic name meaning all available interfaces
-        self.port = 50007 # Arbitrary non-privileged port
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(1/60)
-
-        # server
+        super().__init__()
         self.clients = []
-
-        # threading
-        self.alive = True
-        self.thread = Thread(self.loop)
-
-        # game related stuff
-        self.actions_to_local = Queue()
-        self.actions_to_remote = Queue()
-
-
-    def add_actions(self, actions):
-        for a in actions:
-        #     self.actions_to_local.put({'player': 0, 'action': a})
-            self.actions_to_remote.put(a)
 
     def quit(self):
         print("quit initialized")
         for c in self.clients:
             self.sock.sendto(b'exit', c)
-        if self.alive:
-            self.alive = False
-            self.actions_to_local.shutdown()
-            self.actions_to_remote.shutdown()
-            self.thread.join()
+        super().quit()
         print("quit success")
-
-    def send(self, data: bytes):
-        self.sock.sendto(data, (self.host, self.port))
-
-    def sendstr(self, s: str):
-        self.send(s.encode('utf-8'))
-
-    def recv(self):
-        data, addr = self.sock.recvfrom(1024)
-        return data
-
-    def recvstr(self):
-        data = self.recv()
-        return data.decode('utf-8')
 
     def loop(self):
         self.sock.bind((self.host, self.port))
@@ -95,18 +56,8 @@ class Server:
                 pass
             else:
                 for addr in self.clients:
-                    print(action)
                     if 'state' in action:
                         self.sock.sendto(action['state'], addr)
                     else:
                         l = map(str, (action['player'], action['action'].value, *action.get('params', [])))
                         self.sock.sendto(' '.join(l).encode('utf-8'), addr)
-
-
-if __name__ == '__main__':
-    s = Server()
-    game = Game(s)
-    try:
-        game.main()
-    except KeyboardInterrupt:
-        game.quit()

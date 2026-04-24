@@ -2,36 +2,14 @@ import socket
 import queue
 from queue import Queue
 
-from utils import Thread
+from utils import Connection
 from main import Game, Action
 
-class Client():
-    def __init__(self):
-        self.host = 'localhost' # The remote host
-        self.port = 50007       # The same port as used by the server
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(1/60)
-
-        # threading
-        self.alive = True
-        self.thread = Thread(self.loop)
-
-        # game related stuff
-        self.actions_to_local = Queue()
-        self.actions_to_remote = Queue()
-    
-    def add_actions(self, actions):
-        for a in actions:
-            # self.actions_to_local.put({'player': 0, 'action': a})
-            self.actions_to_remote.put(a)
-    
+class Client(Connection):
     def quit(self):
         print('quit initialized')
         self.sendstr('exit')
-        self.alive = False
-        self.actions_to_local.shutdown()
-        self.actions_to_remote.shutdown()
-        self.thread.join()
+        self.quit()
         print('quit success')
 
     def send(self, data: bytes):
@@ -64,7 +42,7 @@ class Client():
             return
         if res == 'OK':
             print('Connection established')
-        
+
         while self.alive:
             try:
                 data = self.recvstr()
@@ -94,9 +72,3 @@ class Client():
             else:
                 print(f'Sending action {action}')
                 self.sendstr(str(action.value))
-            
-            
-if __name__ == '__main__':
-    c = Client()
-    game = Game(c, False)
-    Thread(game.main)
