@@ -17,6 +17,11 @@ class GameClientArtist:
     def update(self):
         state = self.game.state
         actions_to_remote = self.artist.draw(state)
+        if self.artist.running is False:
+            self.artist.quit()
+            self.connection.quit()
+            self.running = False
+            return
         
         actions_to_local = []
         while True:

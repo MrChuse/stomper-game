@@ -81,9 +81,10 @@ class Artist:
     def __init__(self) -> None:
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.running = True
 
     def draw(self, state):
-        # draw
+        # print('draw')
         self.screen.fill('black')
 
         for p in state:

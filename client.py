@@ -9,7 +9,7 @@ class Client(Connection):
     def quit(self):
         print('quit initialized')
         self.sendstr('exit')
-        self.quit()
+        super().quit()
         print('quit success')
 
     def send(self, data: bytes):

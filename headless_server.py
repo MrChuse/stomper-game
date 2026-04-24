@@ -14,19 +14,23 @@ class GameServerHeadless:
         self.running = True
 
     def update(self):
-        actions_to_local = []
-        while True:
-            try:
-                action = self.connection.actions_to_local.get(False)
-                actions_to_local.append(action)
-            except queue.Empty:
-                break
-        
-        actions_to_remote = self.game.update(actions_to_local)
-        for a in actions_to_remote:
-            self.connection.actions_to_remote.put(a)
-        
-        self.clock.tick(60)
+        try:
+            actions_to_local = []
+            while True:
+                try:
+                    action = self.connection.actions_to_local.get(False)
+                    actions_to_local.append(action)
+                except queue.Empty:
+                    break
+            
+            actions_to_remote = self.game.update(actions_to_local)
+            for a in actions_to_remote:
+                self.connection.actions_to_remote.put(a)
+            
+            self.clock.tick(60)
+        except KeyboardInterrupt:
+            self.connection.quit()
+            raise
     
     def loop(self):
         while self.running:
