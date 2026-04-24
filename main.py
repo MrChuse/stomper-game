@@ -35,6 +35,10 @@ class Game:
         self.state: list[Player] = []
         self.is_server = is_server
     
+    def create_random_player(self):
+        p = random_player()
+        self.state.append(p)
+
     def update(self, actions):
         outgoing_actions = []
 
@@ -52,8 +56,7 @@ class Game:
                 if p_id < 0 or p_id >= len(self.state):
                     if action['action'] is Action.CONNECT:
                         if self.is_server:
-                            p = random_player()
-                            self.state.append(p)
+                            self.create_random_player()
                             outgoing_actions.append({'state': self.to_bytes()})                        
                     continue
 

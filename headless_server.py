@@ -29,9 +29,13 @@ class GameServerHeadless:
             
             self.clock.tick(60)
         except KeyboardInterrupt:
-            self.connection.quit()
+            self.quit()
             raise
     
+    def quit(self):
+        self.connection.quit()
+        self.running = False
+
     def loop(self):
         while self.running:
             self.update()

@@ -11,6 +11,7 @@ class Server(Connection):
     def quit(self):
         print("quit initialized")
         for c in self.clients:
+            if c == 'local': continue
             self.sock.sendto(b'exit', c)
         super().quit()
         print("quit success")
@@ -33,7 +34,7 @@ class Server(Connection):
                         print(f'Client {addr} connected')
                     elif data == b'exit':
                         self.actions_to_local.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT})
-                        self.actions_to_remote.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT})
+                        self.actions_to_remote.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT}) # bad
                         self.clients.remove(addr)
                         print('Client', addr, 'disconnected')
                     else:
@@ -42,7 +43,7 @@ class Server(Connection):
                             action = {'player': self.clients.index(addr), 'action': Action(action)}
                             print('Added', action)
                             self.actions_to_local.put(action)
-                            self.actions_to_remote.put(action)
+                            self.actions_to_remote.put(action) # bad
                         except Exception as e:
                             print("Exception...", e, data)
                 except queue.ShutDown:
@@ -56,6 +57,7 @@ class Server(Connection):
                 pass
             else:
                 for addr in self.clients:
+                    if addr == 'local': continue
                     if 'state' in action:
                         self.sock.sendto(action['state'], addr)
                     else:
