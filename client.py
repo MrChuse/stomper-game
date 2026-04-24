@@ -52,5 +52,4 @@ class Client(Connection):
             except queue.Empty:
                 pass
             else:
-                print(f'Sending action {action}')
                 self.sendstr(str(action.value))

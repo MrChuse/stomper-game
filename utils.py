@@ -29,7 +29,7 @@ class Connection:
         self.thread.join()
 
     def send(self, data: bytes):
-        print('Send:', data, '->', (self.host, self.port))
+        # print('Send:', data, '->', (self.host, self.port))
         self.sock.sendto(data, (self.host, self.port))
 
     def sendstr(self, s: str):
@@ -37,7 +37,7 @@ class Connection:
 
     def recv(self):
         data, addr = self.sock.recvfrom(1024)
-        print('Recv', data, '<-', addr)
+        # print('Recv', data, '<-', addr)
         return data
 
     def recvstr(self):

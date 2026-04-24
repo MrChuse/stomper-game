@@ -41,7 +41,6 @@ class Server(Connection):
                         try:
                             action = int(data.decode('utf-8'))
                             action = {'player': self.clients.index(addr), 'action': Action(action)}
-                            print('Added', action)
                             self.actions_to_local.put(action)
                             self.actions_to_remote.put(action) # bad
                         except Exception as e:
