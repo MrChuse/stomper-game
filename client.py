@@ -10,22 +10,6 @@ class Client(Connection):
         super().quit()
         print('quit success')
 
-    def send(self, data: bytes):
-        print('Send:', data, '->', (self.host, self.port))
-        self.sock.sendto(data, (self.host, self.port))
-
-    def sendstr(self, s: str):
-        self.send(s.encode('utf-8'))
-
-    def recv(self):
-        data, addr = self.sock.recvfrom(1024)
-        print('Recv', data, '<-', addr)
-        return data
-
-    def recvstr(self):
-        data = self.recv()
-        return data.decode('utf-8')
-
     def loop(self):
         self.sendstr('connect')
         for i in range(10):
