@@ -2,7 +2,7 @@ import queue
 
 import pygame
 
-from main import Game
+from core import Game
 from server import Server
 
 class GameServerHeadless:

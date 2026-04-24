@@ -1,6 +1,6 @@
 import queue
 
-from main import Action
+from core import Action
 from utils import Connection
 
 class Server(Connection):

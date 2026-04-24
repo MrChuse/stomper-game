@@ -2,7 +2,7 @@ import queue
 
 import pygame
 
-from main import Game, Artist
+from core import Game, Artist
 from client import Client
 
 class GameClientArtist:

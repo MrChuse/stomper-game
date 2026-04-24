@@ -1,9 +1,7 @@
-import socket
 import queue
-from queue import Queue
 
 from utils import Connection
-from main import Game, Action
+from core import Action
 
 class Client(Connection):
     def quit(self):
