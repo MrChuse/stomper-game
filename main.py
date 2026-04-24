@@ -22,10 +22,14 @@ class Screen:
 
     def clean_up(self):
         return
+    
     def process_events(self, event):
-        return
+        return self.manager.process_events(event)
+    
     def update(self, time_delta):
-        return
+        self.manager.update(time_delta)
+        self.manager.draw_ui(self.surface)
+
     def on_window_size_changed(self, size):
         self.window_size = size
         self.manager.set_window_resolution(size)
@@ -42,20 +46,19 @@ class Screen:
                 if event.type == pygame.QUIT:
                     self.force_quit = True
                     self.is_running = False
-                elif event.type == pygame.WINDOWSIZECHANGED:
-                    if event.window is None:
-                        self.on_window_size_changed((event.x, event.y))
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.force_quit = True
                         self.is_running = False
+                elif event.type == pygame.WINDOWSIZECHANGED:
+                    if event.window is None:
+                        self.on_window_size_changed((event.x, event.y))
                 self.process_events(event)
-                self.manager.process_events(event)
             self.surface.blit(self.background, (0, 0))
-            self.manager.update(time_delta)
+            
             self.update(time_delta)
-            self.manager.draw_ui(self.surface)
-            pygame.display.set_caption(f'Orbits clone | {clock.get_fps():.1f}')
+            
+            pygame.display.set_caption(f'Stomper Game | {clock.get_fps():.1f}')
             pygame.display.update()
         self.clean_up()
         return self.return_value
@@ -91,6 +94,7 @@ class LocalOnlinePickerScreen(Screen):
                                                           'left_target':self.host_button})
 
     def process_events(self, event):
+        super().process_events(event)
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.local_button:
                 self.return_value = 'local'
@@ -117,14 +121,10 @@ class LocalOnlinePickerScreen(Screen):
                     self.return_value = f'online client {text}'
                     self.is_running = False
 
-    def update(self, time_delta):
-        self.manager.update(time_delta)
-        self.manager.draw_ui(self.surface)
-
 def main():
     pygame.init()
     pygame.display.set_caption('Stomper Game')
-    window_surface = pygame.display.set_mode((480, 360), pygame.RESIZABLE)
+    window_surface = pygame.display.set_mode((480, 360))
 
     lop = LocalOnlinePickerScreen(window_surface)
     res = lop.main()
