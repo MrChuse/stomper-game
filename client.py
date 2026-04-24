@@ -52,10 +52,15 @@ class Client():
 
     def loop(self):
         self.sendstr('connect')
-        try:
-            res = self.recvstr()
-        except ConnectionResetError:
-            print('Cant find the server')
+        for i in range(10):
+            try:
+                res = self.recvstr()
+                break
+            except ConnectionResetError:
+                print('Cant find the server')
+            except TimeoutError:
+                print('Timeout')
+        else:
             return
         if res == 'OK':
             print('Connection established')
@@ -70,11 +75,13 @@ class Client():
                     self.quit()
                     break
                 try:
-                    player, action, *params = data.split(' ')
-                    player = int(player)
-                    action = int(action)
-                    params = list(map(int, params))
-                    self.actions_to_local.put({'player': player, 'action': Action(action), 'params': params})
+                    cmd_or_player, *params = data.split(' ')
+                    if cmd_or_player == 'state':
+                        self.actions_to_local.put({'state': params})
+                    else:
+                        player = int(cmd_or_player)
+                        params = list(map(int, params))
+                        self.actions_to_local.put({'player': player, 'action': Action(params[0]), 'params': params[1:]})
                 except Exception as e:
                     print("Exception...", e, data)
 
@@ -89,7 +96,7 @@ class Client():
                 self.sendstr(str(action.value))
             
             
-
-c = Client()
-game = Game(c, False)
-Thread(game.main)
+if __name__ == '__main__':
+    c = Client()
+    game = Game(c, False)
+    Thread(game.main)

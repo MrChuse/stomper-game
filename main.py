@@ -1,12 +1,10 @@
 from dataclasses import dataclass
 from enum import Enum
 from random import randint
-import queue
+import itertools
 
 import pygame
 import pygame.draw
-
-from utils import Thread, Connection
 
 @dataclass
 class Player:
@@ -21,6 +19,7 @@ class Action(Enum):
     DOWN = 3
     CONNECT = 4
     DISCONNECT = 5
+    STATE = 6
 
 def random_color():
     return pygame.Color(randint(0, 255),randint(0, 255),randint(0, 255))
@@ -40,42 +39,48 @@ class Game:
         outgoing_actions = []
 
         for action in actions:
-            p_id = action['player']
-            if p_id < 0 or p_id >= len(self.state):
-                if action['action'] is Action.CONNECT:
-                    if self.is_server:
-                        p = random_player()
-                        self.state.append(p)
-                        outgoing_actions.append({'player': p_id, 'action': Action.CONNECT, 'params': [p.x, p.y, p.color.r, p.color.g, p.color.b]})
-                    else:
-                        params = action.get('params')
-                        if params:
-                            p = Player(params[0], params[1], pygame.Color(params[2], params[3], params[4]))
-                            self.state.append(p)
-                        else:
+            if 'state' in action:
+                if len(action['state']) % 5 != 0:
+                    print("State was transferred wrong probably")
+                    continue
+                self.state = []
+                for b in itertools.batched(action['state'], 5):
+                    b = list(map(int, b))
+                    self.state.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
+            else:
+                p_id = action['player']
+                if p_id < 0 or p_id >= len(self.state):
+                    if action['action'] is Action.CONNECT:
+                        if self.is_server:
                             p = random_player()
                             self.state.append(p)
-                continue
-            p = self.state[action['player']]
-            action = action['action']
-            if action is Action.LEFT:
-                p.x -= 1
-            if action is Action.RIGHT:
-                p.x += 1
-            if action is Action.UP:
-                p.y -= 1
-            if action is Action.DOWN:
-                p.y += 1
-            if action is Action.DISCONNECT:
-                self.state.pop(p_id)
+                            outgoing_actions.append({'state': self.to_bytes()})                        
+                    continue
+
+                p = self.state[action['player']]
+                action = action['action']
+                if action is Action.LEFT:
+                    p.x -= 1
+                if action is Action.RIGHT:
+                    p.x += 1
+                if action is Action.UP:
+                    p.y -= 1
+                if action is Action.DOWN:
+                    p.y += 1
+                if action is Action.DISCONNECT:
+                    self.state.pop(p_id)
+        return outgoing_actions
+
+    def to_bytes(self):
+        l = ['state']
+        for p in self.state:
+            l.append(" ".join(map(str, (p.x, p.y, p.color.r, p.color.g, p.color.b))))
+        return " ".join(l).encode()
 
 class Artist:
     def __init__(self) -> None:
-
-        # pygame setup
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.clock = pygame.time.Clock()
 
     def draw(self, state):
         # draw
@@ -92,20 +97,17 @@ class Artist:
             if event.type == pygame.QUIT:
                 self.running = False
 
-            this_tick_actions = []
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                this_tick_actions.append(Action.LEFT)
-            if keys[pygame.K_RIGHT]:
-                this_tick_actions.append(Action.RIGHT)
-            if keys[pygame.K_UP]:
-                this_tick_actions.append(Action.UP)
-            if keys[pygame.K_DOWN]:
-                this_tick_actions.append(Action.DOWN)
+        this_tick_actions = []
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            this_tick_actions.append(Action.LEFT)
+        if keys[pygame.K_RIGHT]:
+            this_tick_actions.append(Action.RIGHT)
+        if keys[pygame.K_UP]:
+            this_tick_actions.append(Action.UP)
+        if keys[pygame.K_DOWN]:
+            this_tick_actions.append(Action.DOWN)
         return this_tick_actions
 
     def quit(self):
         pygame.quit()
-
-if __name__ == '__main__':
-    main()

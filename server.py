@@ -96,14 +96,17 @@ class Server:
             else:
                 for addr in self.clients:
                     print(action)
-                    l = map(str, (action['player'], action['action'].value, *action.get('params', [])))
-                    self.sock.sendto(' '.join(l).encode('utf-8'), addr)
+                    if 'state' in action:
+                        self.sock.sendto(action['state'], addr)
+                    else:
+                        l = map(str, (action['player'], action['action'].value, *action.get('params', [])))
+                        self.sock.sendto(' '.join(l).encode('utf-8'), addr)
 
 
-
-s = Server()
-game = Game(s)
-try:
-    game.main()
-except KeyboardInterrupt:
-    game.quit()
+if __name__ == '__main__':
+    s = Server()
+    game = Game(s)
+    try:
+        game.main()
+    except KeyboardInterrupt:
+        game.quit()
