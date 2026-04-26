@@ -18,6 +18,7 @@ class Artist(BaseViewPygame):
             self.created_screen = False
         self.running = True
         self.this_tick_actions = []
+        self.time_delta = 0
         
         self.font = pygame.freetype.SysFont('Segoe Print', 30)
 
@@ -28,6 +29,8 @@ class Artist(BaseViewPygame):
             pygame.draw.rect(self.screen, p.color, (p.x,p.y,SIZE,SIZE))
 
         self.font.render_to(self.screen, (0, 0, 0, 0), str(self.game.current_tick), 'white')
+        if self.time_delta > 0:
+            self.font.render_to(self.screen, (0, 30, 0, 0), str(round(1/self.time_delta, 2)) + ' fps', 'white')
 
         pygame.display.flip()
 

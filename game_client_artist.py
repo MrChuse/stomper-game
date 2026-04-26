@@ -1,5 +1,6 @@
 import queue
 import itertools
+import time
 
 import pygame
 
@@ -20,6 +21,7 @@ class GameClientArtist:
         self.received_packets: list[ServerPacket] = []
         self.current_tick_packets: list[ServerPacket] = []
         self.last_sent_tick = -1
+        self.last_sent_tick_time = time.perf_counter()
 
     def update(self):
         try:
@@ -78,7 +80,10 @@ class GameClientArtist:
                 actions_to_local.update(packet.actions)
             if len(actions_to_local) == len(self.game.players):
                 self.game.update(actions_to_local)
-
+                cur_tick = time.perf_counter()
+                td = cur_tick - self.last_sent_tick_time
+                self.artist.time_delta = td
+                self.last_sent_tick_time = cur_tick
                 self.current_tick_packets.clear()
 
             self.clock.tick(60)
