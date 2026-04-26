@@ -36,12 +36,12 @@ class Game:
         self.is_server = is_server
 
     def create_random_player(self):
-        print(f'creating random player on tick {self.current_tick}')
+        # print(f'creating random player on tick {self.current_tick}')
         p = random_player()
         self.players.append(p)
 
     def update(self, actions: dict):
-        print('tick', self.current_tick)
+        # print('tick', self.current_tick)
         outgoing_actions = []
         for p_id, p_actions in actions.items():
             for action in p_actions:

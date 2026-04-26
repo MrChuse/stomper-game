@@ -83,7 +83,7 @@ class Server(Connection):
                             packet = ServerPacket(tick)
                             packet.actions[player] = actions
                             self.packets_to_local.put(packet)
-                            print('received', tick)
+                            # print('received', tick)
                             # else:
                             #     print(f'ACHTUNG! len data was wrong: {data[0]} != {len(data)}-1')
                         except Exception as e:
@@ -104,5 +104,5 @@ class Server(Connection):
                     if isinstance(packet, dict) and 'state' in packet:
                         self.send(packet['state'], addr)
                     else:
-                        print('sent', packet.tick)
+                        # print('sent', packet.tick)
                         self.sendlistint(packet.to_list(), addr)

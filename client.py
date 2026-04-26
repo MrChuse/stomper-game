@@ -80,7 +80,7 @@ class Client(Connection):
                             print(f'More data was present than needed to parse ServerPacket... IDK {data}')
                         
                         self.packets_to_local.put(packet)
-                        print('received', state_or_tick)
+                        # print('received', state_or_tick)
                 except Exception as e:
                     print("Exception...", e, data)
 
@@ -91,5 +91,5 @@ class Client(Connection):
             except queue.Empty:
                 pass
             else:
-                print('sent', packet.tick)
+                # print('sent', packet.tick)
                 self.sendlistint(packet.to_list())

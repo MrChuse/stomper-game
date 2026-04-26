@@ -24,6 +24,7 @@ class GameClientArtist:
     def update(self):
         try:
             # print('tick', self.game.current_tick)
+            pygame.display.set_caption(f'Stomper Game | {self.clock.get_fps():.1f}')
             self.artist.show()
             if self.artist.running is False:
                 self.quit()
@@ -48,7 +49,7 @@ class GameClientArtist:
                         for b in itertools.batched(s[1:], 5):
                             b = list(map(int, b))
                             self.game.players.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
-                        print(f'set current_tick to {self.game.current_tick} in state transfer')
+                        # print(f'set current_tick to {self.game.current_tick} in state transfer')
                     else:
                         self.received_packets.append(packet)
                         

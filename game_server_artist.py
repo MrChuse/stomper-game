@@ -31,6 +31,7 @@ class GameServerArtist:
 
     def update(self):
         try:
+            pygame.display.set_caption(f'Stomper Game | {self.clock.get_fps():.1f}')
             self.artist.show()
             if self.artist.running is False:
                 self.artist.quit()
