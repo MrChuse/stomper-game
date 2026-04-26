@@ -3,7 +3,7 @@ import queue
 import pygame
 
 from core import Game
-from server import Server
+from server import Server, ServerPacket
 
 class GameServerHeadless:
     def __init__(self):
@@ -13,25 +13,37 @@ class GameServerHeadless:
         self.clock = pygame.time.Clock()
         self.running = True
 
+        self.received_packets: list[ServerPacket] = []
+        self.current_tick_packets: list[ServerPacket] = []
+
     def update(self):
         try:
-            actions_to_local = []
             while True:
                 try:
-                    action = self.connection.actions_to_local.get(False)
-                    actions_to_local.append(action)
+                    packet = self.connection.packets_to_local.get(False)
+                    self.received_packets.append(packet)
                 except queue.Empty:
                     break
             
-            actions_to_remote = self.game.update(actions_to_local)
-            for a in actions_to_remote:
-                self.connection.actions_to_remote.put(a)
+            for packet in self.received_packets.copy():
+                if packet.tick == self.game.current_tick:
+                    self.current_tick_packets.append(packet)
+                    self.received_packets.remove(packet)
             
+            actions_to_local = {}
+            for packet in self.current_tick_packets:
+                actions_to_local.update(packet.actions)
+
+            if len(actions_to_local) == len(self.game.players):
+                actions_to_remote = self.game.update(actions_to_local)
+                for a in actions_to_remote:
+                    self.connection.packets_to_remote.put(a)
+
             self.clock.tick(60)
         except KeyboardInterrupt:
             self.quit()
             raise
-    
+
     def quit(self):
         self.connection.quit()
         self.running = False

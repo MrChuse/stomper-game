@@ -1,11 +1,14 @@
 from .base_view import BaseViewPygame
 
 import pygame
-from core import Action, WIDTH, HEIGHT, SIZE
+import pygame.freetype
+pygame.freetype.init()
+
+from core import Game, Action, WIDTH, HEIGHT, SIZE
 
 class Artist(BaseViewPygame):
-    def __init__(self, screen=None, state=None) -> None:
-        self.state = state
+    def __init__(self, screen=None, game: Game = None) -> None:
+        self.game = game
         if screen is None:
             pygame.init()
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -15,12 +18,16 @@ class Artist(BaseViewPygame):
             self.created_screen = False
         self.running = True
         self.this_tick_actions = []
+        
+        self.font = pygame.freetype.SysFont('Segoe Print', 30)
 
     def show(self):
         self.screen.fill('black')
 
-        for p in self.state:
+        for p in self.game.players:
             pygame.draw.rect(self.screen, p.color, (p.x,p.y,SIZE,SIZE))
+
+        self.font.render_to(self.screen, (0, 0, 0, 0), str(self.game.current_tick), 'white')
 
         pygame.display.flip()
 
@@ -39,6 +46,9 @@ class Artist(BaseViewPygame):
         super().process_event(event)
         if event.type == pygame.QUIT:
             self.running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.running = False
 
     def quit(self):
         if self.created_screen:

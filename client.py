@@ -1,7 +1,24 @@
 import queue
+from dataclasses import dataclass, field
 
 from utils import Connection
 from core import Action
+
+from server import ServerPacket # avoiding circular imports
+
+@dataclass()
+class ClientPacket:
+    tick: int
+    actions: list[Action] = field(init=False)
+
+    def __post_init__(self):
+        self.actions = []
+
+    def to_list(self):
+        res = [self.tick]
+        for action in self.actions:
+            res.append(action.value)
+        return res
 
 class Client(Connection):
     def quit(self):
@@ -31,25 +48,48 @@ class Client(Connection):
             except TimeoutError:
                 pass
             else:
-                if data == 'exit': 
+                if data == 'exit':
                     self.quit()
                     break
                 try:
-                    cmd_or_player, *params = data.split(' ')
-                    if cmd_or_player == 'state':
-                        self.actions_to_local.put({'state': params})
+                    state_or_tick, *data = data.split(' ')
+                    if state_or_tick == 'state':
+                        self.packets_to_local.put({'state': data})
                     else:
-                        player = int(cmd_or_player)
-                        params = list(map(int, params))
-                        self.actions_to_local.put({'player': player, 'action': Action(params[0]), 'params': params[1:]})
+                        packet = ServerPacket(int(state_or_tick))
+                        data = list(map(int, data))
+                        it = iter(data)
+                        try:
+                            num_players = next(it)
+                            for i in range(num_players):
+                                player = next(it)
+                                length = next(it)
+                                actions = []
+                                for i in range(length):
+                                    a = next(it)
+                                    actions.append(Action(a))
+                                packet.actions[player] = actions
+                        except StopIteration as e:
+                            print(f'ServerPacket parsing went wrong: {e}, {data}')
+                            continue
+                        try:
+                            next(it)
+                        except StopIteration as e:
+                            pass # data should be exhausted by now
+                        else:
+                            print(f'More data was present than needed to parse ServerPacket... IDK {data}')
+                        
+                        self.packets_to_local.put(packet)
+                        print('received', state_or_tick)
                 except Exception as e:
                     print("Exception...", e, data)
 
             try:
-                action = self.actions_to_remote.get(False)
+                packet: ClientPacket = self.packets_to_remote.get(False)
             except queue.ShutDown:
                 return
             except queue.Empty:
                 pass
             else:
-                self.sendstr(str(action.value))
+                print('sent', packet.tick)
+                self.sendlistint(packet.to_list())

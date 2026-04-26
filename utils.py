@@ -2,6 +2,8 @@ import threading
 from queue import Queue
 import socket
 
+from core import Action, Player
+
 class Thread(threading.Thread):
     def __init__(self, t, *args):
         threading.Thread.__init__(self, target=t, args=args)
@@ -19,13 +21,13 @@ class Connection:
         self.thread = Thread(self.loop)
 
         # game related stuff
-        self.actions_to_local = Queue()
-        self.actions_to_remote = Queue()
+        self.packets_to_local = Queue()
+        self.packets_to_remote = Queue()
 
     def quit(self):
         self.alive = False
-        self.actions_to_local.shutdown()
-        self.actions_to_remote.shutdown()
+        self.packets_to_local.shutdown()
+        self.packets_to_remote.shutdown()
         self.thread.join()
 
     def send(self, data: bytes, addr=None):
@@ -36,6 +38,12 @@ class Connection:
 
     def sendstr(self, s: str, addr=None):
         self.send(s.encode('utf-8'), addr)
+    
+    def sendlistint(self, l: list[int], addr=None):
+        # print('Send', l)
+        # b = bytearray([len(l)]) + bytearray(l)
+        s = ' '.join(map(str, l))
+        self.sendstr(s, addr)
 
     def recv(self):
         data, addr = self.sock.recvfrom(1024)
@@ -45,6 +53,6 @@ class Connection:
     def recvstr(self):
         data, addr = self.recv()
         return data.decode('utf-8'), addr
-    
+
     def loop(self):
         pass

@@ -4,13 +4,12 @@ from random import randint
 import itertools
 
 import pygame
-import pygame.draw
 
 @dataclass
 class Player:
     x: float
     y: float
-    color: pygame.color
+    color: pygame.Color
 
 class Action(Enum):
     RIGHT = 0
@@ -37,32 +36,16 @@ class Game:
         self.is_server = is_server
 
     def create_random_player(self):
+        print(f'creating random player on tick {self.current_tick}')
         p = random_player()
         self.players.append(p)
 
-    def update(self, actions):
+    def update(self, actions: dict):
+        print('tick', self.current_tick)
         outgoing_actions = []
-
-        for action in actions:
-            if 'state' in action:
-                if len(action['state']) % 5 != 0:
-                    print("State was transferred wrong probably")
-                    continue
-                self.players.clear()
-                for b in itertools.batched(action['state'], 5):
-                    b = list(map(int, b))
-                    self.players.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
-            else:
-                p_id = action['player']
-                if p_id < 0 or p_id >= len(self.players):
-                    if action['action'] is Action.CONNECT:
-                        if self.is_server:
-                            self.create_random_player()
-                            outgoing_actions.append({'state': self.to_bytes()})
-                    continue
-
-                p = self.players[action['player']]
-                action = action['action']
+        for p_id, p_actions in actions.items():
+            for action in p_actions:
+                p = self.players[p_id]
                 if action is Action.LEFT:
                     p.x -= 1
                 if action is Action.RIGHT:
@@ -71,13 +54,17 @@ class Game:
                     p.y -= 1
                 if action is Action.DOWN:
                     p.y += 1
-                if action is Action.DISCONNECT:
-                    self.players.pop(p_id)
         self.current_tick += 1
         return outgoing_actions
 
+    def to_list(self):
+        res = [self.current_tick]
+        for p in self.players:
+            res.extend([p.x, p.y, p.color.r, p.color.g, p.color.b])
+        return res
+
     def to_bytes(self):
-        l = ['state']
+        l = ['state', str(self.current_tick)]
         for p in self.players:
             l.append(" ".join(map(str, (p.x, p.y, p.color.r, p.color.g, p.color.b))))
         return " ".join(l).encode()
