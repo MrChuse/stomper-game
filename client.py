@@ -14,7 +14,7 @@ class Client(Connection):
         self.sendstr('connect')
         for i in range(10):
             try:
-                res = self.recvstr()
+                res, addr = self.recvstr()
                 break
             except ConnectionResetError:
                 print('Cant find the server')
@@ -27,7 +27,7 @@ class Client(Connection):
 
         while self.alive:
             try:
-                data = self.recvstr()
+                data, addr = self.recvstr()
             except TimeoutError:
                 pass
             else:

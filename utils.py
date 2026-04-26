@@ -28,21 +28,23 @@ class Connection:
         self.actions_to_remote.shutdown()
         self.thread.join()
 
-    def send(self, data: bytes):
+    def send(self, data: bytes, addr=None):
         # print('Send:', data, '->', (self.host, self.port))
-        self.sock.sendto(data, (self.host, self.port))
+        if addr is None:
+            addr = (self.host, self.port)
+        self.sock.sendto(data, addr)
 
-    def sendstr(self, s: str):
-        self.send(s.encode('utf-8'))
+    def sendstr(self, s: str, addr=None):
+        self.send(s.encode('utf-8'), addr)
 
     def recv(self):
         data, addr = self.sock.recvfrom(1024)
         # print('Recv', data, '<-', addr)
-        return data
+        return data, addr
 
     def recvstr(self):
-        data = self.recv()
-        return data.decode('utf-8')
+        data, addr = self.recv()
+        return data.decode('utf-8'), addr
     
     def loop(self):
         pass

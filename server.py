@@ -12,7 +12,7 @@ class Server(Connection):
         print("quit initialized")
         for c in self.clients:
             if c == 'local': continue
-            self.sock.sendto(b'exit', c)
+            self.send(b'exit', c)
         super().quit()
         print("quit success")
 
@@ -21,14 +21,14 @@ class Server(Connection):
 
         while self.alive:
             try:
-                data, addr = self.sock.recvfrom(1024)
+                data, addr = self.recv()
             except TimeoutError:
                 pass
             else:
                 try:
                     if data == b'connect':
                         self.clients.append(addr)
-                        self.sock.sendto('OK'.encode('utf-8'), addr)
+                        self.sendstr('OK', addr)
                         self.actions_to_local.put({'player': len(self.clients), 'action': Action.CONNECT})
                         # self.actions_to_remote.put({'player': len(self.clients), 'action': Action.CONNECT})
                         print(f'Client {addr} connected')
@@ -58,7 +58,7 @@ class Server(Connection):
                 for addr in self.clients:
                     if addr == 'local': continue
                     if 'state' in action:
-                        self.sock.sendto(action['state'], addr)
+                        self.send(action['state'], addr)
                     else:
                         l = map(str, (action['player'], action['action'].value, *action.get('params', [])))
-                        self.sock.sendto(' '.join(l).encode('utf-8'), addr)
+                        self.sendstr(' '.join(l), addr)
