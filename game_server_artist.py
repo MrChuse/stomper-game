@@ -12,7 +12,7 @@ class GameServerArtist:
         self.connection.clients.append('local') # bad
         self.game = Game(True)
         self.game.create_random_player()
-        self.artist = Artist(screen, self.game.state)
+        self.artist = Artist(screen, self.game.players)
 
         self.clock = pygame.time.Clock()
         self.running = True

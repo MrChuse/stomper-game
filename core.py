@@ -32,12 +32,13 @@ HEIGHT = 360
 SIZE = 30
 class Game:
     def __init__(self, is_server=True):
-        self.state: list[Player] = []
+        self.current_tick = 0
+        self.players: list[Player] = []
         self.is_server = is_server
-    
+
     def create_random_player(self):
         p = random_player()
-        self.state.append(p)
+        self.players.append(p)
 
     def update(self, actions):
         outgoing_actions = []
@@ -47,20 +48,20 @@ class Game:
                 if len(action['state']) % 5 != 0:
                     print("State was transferred wrong probably")
                     continue
-                self.state.clear()
+                self.players.clear()
                 for b in itertools.batched(action['state'], 5):
                     b = list(map(int, b))
-                    self.state.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
+                    self.players.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
             else:
                 p_id = action['player']
-                if p_id < 0 or p_id >= len(self.state):
+                if p_id < 0 or p_id >= len(self.players):
                     if action['action'] is Action.CONNECT:
                         if self.is_server:
                             self.create_random_player()
-                            outgoing_actions.append({'state': self.to_bytes()})                        
+                            outgoing_actions.append({'state': self.to_bytes()})
                     continue
 
-                p = self.state[action['player']]
+                p = self.players[action['player']]
                 action = action['action']
                 if action is Action.LEFT:
                     p.x -= 1
@@ -71,11 +72,12 @@ class Game:
                 if action is Action.DOWN:
                     p.y += 1
                 if action is Action.DISCONNECT:
-                    self.state.pop(p_id)
+                    self.players.pop(p_id)
+        self.current_tick += 1
         return outgoing_actions
 
     def to_bytes(self):
         l = ['state']
-        for p in self.state:
+        for p in self.players:
             l.append(" ".join(map(str, (p.x, p.y, p.color.r, p.color.g, p.color.b))))
         return " ".join(l).encode()

@@ -10,7 +10,7 @@ class GameClientArtist:
     def __init__(self, host='localhost', screen=None):
         self.connection = Client(host)
         self.game = Game(False)
-        self.artist = Artist(screen, self.game.state)
+        self.artist = Artist(screen, self.game.players)
 
         self.clock = pygame.time.Clock()
         self.running = True
