@@ -4,10 +4,10 @@ import pygame
 import pygame.freetype
 pygame.freetype.init()
 
-from core import Game, Action, WIDTH, HEIGHT, SIZE
+from back.core import SquareMoveGame, Action, WIDTH, HEIGHT, SIZE
 
 class Artist(BaseViewPygame):
-    def __init__(self, screen=None, game: Game = None) -> None:
+    def __init__(self, screen=None, game: SquareMoveGame = None) -> None:
         self.game = game
         if screen is None:
             pygame.init()
@@ -19,7 +19,7 @@ class Artist(BaseViewPygame):
         self.running = True
         self.this_tick_actions = []
         self.time_delta = 0
-        
+
         self.font = pygame.freetype.SysFont('Segoe Print', 30)
 
     def show(self):

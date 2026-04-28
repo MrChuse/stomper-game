@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import logging
 
 from utils import Connection
-from core import Action
+from back.core import Action
 
 from server import ServerPacket # avoiding circular imports
 

@@ -6,7 +6,7 @@ import logging
 
 import pygame
 
-from core import Game
+from back.core import SquareMoveGame as Game
 from server import Server, ServerPacket
 
 class GameServerHeadless:

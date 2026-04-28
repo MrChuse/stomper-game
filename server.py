@@ -2,7 +2,7 @@ import queue
 from dataclasses import dataclass, field
 import logging
 
-from core import Action
+from back.core import Action
 from utils import Connection
 
 from traceback import print_exc

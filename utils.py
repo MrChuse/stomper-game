@@ -5,7 +5,7 @@ import socket
 from collections import deque
 import logging
 
-from core import Action, Player
+from back.core import Action, Player
 
 # class Queue(deque):
 #     def get(self, blocking):

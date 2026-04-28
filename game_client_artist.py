@@ -10,7 +10,7 @@ import logging
 
 import pygame
 
-from core import Game, Player
+from back.core import SquareMoveGame as Game, Player
 from front.artist import Artist
 from client import Client, ClientPacket
 from server import ServerPacket
@@ -77,7 +77,7 @@ class GameClientArtist:
                     else:
                         # print(f'put {packet.tick} into received packets')
                         self.received_packets.append(packet)
-                        
+
                 except queue.Empty:
                     # break
                     logging.error('queue.Empty: This should be impossible')
@@ -112,7 +112,7 @@ class GameClientArtist:
 
             if self.last_sent_tick < self.game.current_tick:
                 self.send_actions()
-            
+
             self.collect_packets()
             actions_to_local = self.parse_packets()
             logging.debug(f'{actions_to_local}, {len(self.game.players)}')

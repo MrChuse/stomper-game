@@ -9,7 +9,7 @@ import logging
 
 import pygame
 
-from core import Game
+from back.core import SquareMoveGame as Game
 from front.artist import Artist
 from server import Server, ServerPacket
 from utils import Thread
