@@ -60,7 +60,7 @@ class GameServerHeadless:
                     packet.actions.update(actions_to_local)
                     self.connection.packets_to_remote.put(packet)
 
-                self.clock.tick(120)
+            self.clock.tick(120)
         except KeyboardInterrupt:
             self.quit()
             raise

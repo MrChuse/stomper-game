@@ -100,7 +100,7 @@ class GameServerArtist:
 
                 self.current_tick_packets.clear()
 
-                self.clock.tick(120)
+            self.clock.tick(120)
         except KeyboardInterrupt:
             self.quit()
             raise
