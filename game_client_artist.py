@@ -51,7 +51,7 @@ class GameClientArtist:
             for event in pygame.event.get():
                 self.artist.process_event(event)
             # print('end handling events')
-            clock.tick(60)
+            clock.tick(settings.FPS)
 
     def collect_packets(self):
             # collects packets into self.received_packets

@@ -55,7 +55,7 @@ class GameServerArtist:
 
             for event in pygame.event.get():
                 self.artist.process_event(event)
-            clock.tick(60)
+            clock.tick(settings.FPS)
 
     def update(self):
         try:

@@ -12,6 +12,7 @@ from pygame_gui.windows import UIMessageWindow
 
 from game_client_artist import GameClientArtist
 from game_server_artist import GameServerArtist
+from game_artist import GameArtist
 
 class Screen:
     def __init__(self, surface: pygame.Surface):
@@ -137,7 +138,7 @@ def main():
         return
 
     if res.startswith('local'):
-        raise NotImplementedError
+        instance = GameArtist(window_surface)
     elif res.startswith('online'):
         # online host
         # or
