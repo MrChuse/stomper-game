@@ -1,3 +1,7 @@
+import settings
+if settings.PROFILER:
+    import yappi
+
 import socket
 
 import pygame
@@ -143,8 +147,12 @@ def main():
             instance = GameServerArtist(screen=window_surface)
         elif len(parts) == 3 and parts[1] == 'client':
             instance = GameClientArtist(parts[2], screen=window_surface)
-    instance.loop()
     pygame.quit()
 
 if __name__ == '__main__':
+    if settings.PROFILER:
+        yappi.start()
     main()
+    if settings.PROFILER:
+        yappi.get_func_stats().print_all()
+        yappi.get_thread_stats().print_all()

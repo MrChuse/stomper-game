@@ -1,12 +1,24 @@
 import threading
 from queue import Queue
+import queue
 import socket
+from collections import deque
 
 from core import Action, Player
 
+# class Queue(deque):
+#     def get(self, blocking):
+#         if len(self) == 0:
+#             raise queue.Empty
+#         return self.popleft()
+#     def put(self, x):
+#         return self.append(x)
+#     def shutdown(self):
+#         return
+
 class Thread(threading.Thread):
     def __init__(self, t, *args):
-        threading.Thread.__init__(self, target=t, args=args)
+        threading.Thread.__init__(self, target=t, args=args, name=self.__class__.__name__)
         self.start()
 
 class Connection:
@@ -14,7 +26,7 @@ class Connection:
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(1/60)
+        self.sock.settimeout(1/1000)
 
         # threading
         self.alive = True

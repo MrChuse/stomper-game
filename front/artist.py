@@ -30,7 +30,7 @@ class Artist(BaseViewPygame):
 
         self.font.render_to(self.screen, (0, 0, 0, 0), str(self.game.current_tick), 'white')
         if self.time_delta > 0:
-            self.font.render_to(self.screen, (0, 30, 0, 0), str(round(1/self.time_delta, 2)) + ' fps', 'white')
+            self.font.render_to(self.screen, (0, 30, 0, 0), str(round(self.time_delta, 2)) + ' fps', 'white')
 
         pygame.display.flip()
 

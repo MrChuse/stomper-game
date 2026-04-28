@@ -62,11 +62,12 @@ class Server(Connection):
                         # self.actions_to_remote.put({'player': len(self.clients), 'action': Action.CONNECT})
                         print(f'Client {addr} connected')
                     elif data == b'exit':
-                        for f in self.on_disconnect_callbacks:
-                            f(self.clients.index(addr))
-                        self.packets_to_remote.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT}) # bad
-                        self.clients.remove(addr)
-                        print('Client', addr, 'disconnected')
+                        if addr in self.clients:
+                            for f in self.on_disconnect_callbacks:
+                                f(self.clients.index(addr))
+                            self.packets_to_remote.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT}) # bad
+                            self.clients.remove(addr)
+                            print('Client', addr, 'disconnected')
                     else:
                         try:
                             try:
