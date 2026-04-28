@@ -3,6 +3,7 @@ from queue import Queue
 import queue
 import socket
 from collections import deque
+import logging
 
 from core import Action, Player
 
@@ -43,7 +44,7 @@ class Connection:
         self.thread.join()
 
     def send(self, data: bytes, addr=None):
-        # print('Send:', data, '->', (self.host, self.port))
+        logging.debug(f'Send: {data} -> {addr}')
         if addr is None:
             addr = (self.host, self.port)
         self.sock.sendto(data, addr)
@@ -59,7 +60,7 @@ class Connection:
 
     def recv(self):
         data, addr = self.sock.recvfrom(1024)
-        # print('Recv', data, '<-', addr)
+        logging.debug(f'Recv {data} <- {addr}')
         return data, addr
 
     def recvstr(self):

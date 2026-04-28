@@ -3,6 +3,7 @@ if settings.PROFILER:
     import yappi
 
 import socket
+import logging
 
 import pygame
 import pygame_gui
@@ -152,6 +153,7 @@ def main():
 if __name__ == '__main__':
     if settings.PROFILER:
         yappi.start()
+    logging.basicConfig(level=settings.LOGGING_LEVEL)
     main()
     if settings.PROFILER:
         yappi.get_func_stats().print_all()
