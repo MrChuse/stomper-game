@@ -1,5 +1,6 @@
 import queue
 from dataclasses import dataclass, field
+import logging
 
 from utils import Connection
 from core import Action
@@ -22,10 +23,10 @@ class ClientPacket:
 
 class Client(Connection):
     def quit(self):
-        print('quit initialized')
+        logging.info('quit initialized')
         self.sendstr('exit')
         super().quit()
-        print('quit success')
+        logging.info('quit success')
 
     def loop(self):
         self.sendstr('connect')
@@ -34,13 +35,13 @@ class Client(Connection):
                 res, addr = self.recvstr()
                 break
             except ConnectionResetError:
-                print('Cant find the server')
+                logging.error('Cant find the server')
             except TimeoutError:
-                print('Timeout')
+                logging.error('Timeout')
         else:
             return
         if res == 'OK':
-            print('Connection established')
+            logging.info('Connection established')
 
         while self.alive:
             try:
@@ -70,19 +71,19 @@ class Client(Connection):
                                     actions.append(Action(a))
                                 packet.actions[player] = actions
                         except StopIteration as e:
-                            print(f'ServerPacket parsing went wrong: {e}, {data}')
+                            logging.error(f'ServerPacket parsing went wrong: {e}, {data}')
                             continue
                         try:
                             next(it)
                         except StopIteration as e:
                             pass # data should be exhausted by now
                         else:
-                            print(f'More data was present than needed to parse ServerPacket... IDK {data}')
+                            logging.error(f'More data was present than needed to parse ServerPacket... IDK {data}')
                         
                         self.packets_to_local.put(packet)
-                        # print('received', state_or_tick)
+                        logging.debug(f'received {state_or_tick}')
                 except Exception as e:
-                    print("Exception...", e, data)
+                    logging.error("Exception...", e, data)
 
             try:
                 packet: ClientPacket = self.packets_to_remote.get(False)
@@ -91,5 +92,5 @@ class Client(Connection):
             except queue.Empty:
                 pass
             else:
-                # print('sent', packet.tick)
+                logging.debug(f'sent {packet.tick}')
                 self.sendlistint(packet.to_list())

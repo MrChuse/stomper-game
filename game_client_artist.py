@@ -6,6 +6,7 @@ import queue
 import itertools
 import time
 from collections import deque
+import logging
 
 import pygame
 
@@ -62,14 +63,14 @@ class GameClientArtist:
                     if isinstance(packet, dict):
                         if 'state' in packet:
                             s = packet['state']
-                            print(s)
+                            s = list(map(int, s))
+                            logging.info(f'State: {s}')
                             if (len(s)-1) % 5 != 0:
                                 print("State was transferred wrong probably")
                                 # continue
                             self.game.current_tick = int(s[0])
                             self.game.players.clear()
                         for b in itertools.batched(s[1:], 5):
-                            b = list(map(int, b))
                             self.game.players.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
                         # print(f'set current_tick to {self.game.current_tick} in state transfer')
                         self.send_actions()
@@ -79,7 +80,7 @@ class GameClientArtist:
                         
                 except queue.Empty:
                     # break
-                    print('queue.Empty: This should be impossible')
+                    logging.error('queue.Empty: This should be impossible')
                 except queue.ShutDown:
                     self.quit()
                     return
@@ -96,7 +97,6 @@ class GameClientArtist:
             actions_to_local = {}
             for packet in self.current_tick_packets:
                 actions_to_local.update(packet.actions)
-            # print(actions_to_local)
             return actions_to_local
 
     def send_actions(self):
@@ -115,7 +115,7 @@ class GameClientArtist:
             
             self.collect_packets()
             actions_to_local = self.parse_packets()
-            # print(actions_to_local)
+            logging.debug(f'{actions_to_local}, {len(self.game.players)}')
 
             if len(actions_to_local) == len(self.game.players):
                 self.game.update(actions_to_local)
@@ -144,6 +144,7 @@ class GameClientArtist:
 if __name__ == '__main__':
     if settings.PROFILER:
         yappi.start()
+    logging.basicConfig(level=settings.LOGGING_LEVEL)
     gca = GameClientArtist()
     if settings.PROFILER:
         yappi.get_func_stats().print_all()

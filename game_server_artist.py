@@ -5,6 +5,7 @@ if settings.PROFILER:
 import queue
 import time
 from collections import deque
+import logging
 
 import pygame
 
@@ -36,7 +37,7 @@ class GameServerArtist:
         self.update_artist()
 
     def on_connect(self):
-        print('on_connect called')
+        logging.info('on_connect called')
         self.game.create_random_player()
         self.connection.packets_to_remote.put({'state': self.game.to_bytes()})
 
@@ -116,6 +117,7 @@ class GameServerArtist:
 if __name__ == '__main__':
     if settings.PROFILER:
         yappi.start()
+    logging.basicConfig(level=settings.LOGGING_LEVEL)
     gsa = GameServerArtist()
     if settings.PROFILER:
         yappi.get_func_stats().print_all()

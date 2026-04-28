@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from random import randint
 import itertools
+import logging
 
 import pygame
 
@@ -36,7 +37,7 @@ class Game:
         self.is_server = is_server
 
     def create_random_player(self):
-        # print(f'creating random player on tick {self.current_tick}')
+        logging.debug(f'creating random player on tick {self.current_tick}')
         p = random_player()
         self.players.append(p)
 
