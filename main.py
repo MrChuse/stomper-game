@@ -77,25 +77,21 @@ class LocalOnlinePickerScreen(Screen):
         rect1 = rect1.inflate(-200, -200)
         rect1.height /= 2
         self.local_button = UIButton(rect1, 'Local', manager=self.manager,)
-        rect2 = pygame.Rect((0, 0), rect1.size)
-        # rect2.bottomright = -100, -100
-        self.online_button = UIButton(rect2, 'Online', manager=self.manager,
-                                      anchors={'centerx': 'centerx',
-                                            'top_target': self.local_button})
-        rect3 = pygame.Rect(rect2)
+
+        rect3 = pygame.Rect((0, 0), rect1.size)
         rect3.left = rect1.left
         rect3.width /= 2
-        self.host_button = UIButton(rect3, 'Host', self.manager, visible=False,
+        self.host_button = UIButton(rect3, 'Host', self.manager,
                                     anchors={'top_target': self.local_button})
         rect4 = pygame.Rect(rect3)
         rect4.left = 0
         rect4.height -= 30
-        self.client_button = UIButton(rect4, 'Connect', self.manager, visible=False,
+        self.client_button = UIButton(rect4, 'Connect', self.manager,
                                     anchors={'top_target': self.local_button,
                                             'left_target':self.host_button})
         self.placeholder_ip = '127.0.0.1'
         self.client_text_entry = UITextEntryLine(pygame.Rect(0, 0, rect4.width, 30), self.manager,
-                                                 visible=False, placeholder_text=self.placeholder_ip,
+                                                 placeholder_text=self.placeholder_ip,
                                                  anchors={'top_target': self.client_button,
                                                           'left_target':self.host_button})
 
@@ -105,11 +101,6 @@ class LocalOnlinePickerScreen(Screen):
             if event.ui_element == self.local_button:
                 self.return_value = 'local'
                 self.is_running = False
-            elif event.ui_element == self.online_button:
-                self.online_button.hide()
-                self.host_button.show()
-                self.client_button.show()
-                self.client_text_entry.show()
             elif event.ui_element == self.host_button:
                 self.return_value = 'online host'
                 self.is_running = False
