@@ -20,7 +20,7 @@ class GameServerHeadless:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.received_packets: deque[ServerPacket] = deque(maxlen=100)
+        self.received_packets: deque[ServerPacket] = deque(maxlen=settings.UPS)
         self.current_tick_packets: list[ServerPacket] = []
 
         self.loop()
@@ -51,16 +51,17 @@ class GameServerHeadless:
             for packet in self.current_tick_packets:
                 actions_to_local.update(packet.actions)
 
-            logging.debug(f'{actions_to_local}, {len(self.game.players)}')
+            # logging.debug(f'{actions_to_local}, {len(self.game.players)}')
             if len(actions_to_local) == len(self.game.players):
                 logging.debug(f'update, {self.game.current_tick}')
                 self.game.update(actions_to_local)
                 self.current_tick_packets = []
                 if len(self.game.players) > 0:
+                    packet = ServerPacket(self.game.current_tick)
                     packet.actions.update(actions_to_local)
                     self.connection.packets_to_remote.put(packet)
 
-            self.clock.tick(120)
+            self.clock.tick(settings.UPS)
         except KeyboardInterrupt:
             self.quit()
             raise

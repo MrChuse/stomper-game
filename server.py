@@ -104,6 +104,7 @@ class Server(Connection):
                 for addr in self.clients:
                     if addr == 'local': continue
                     if isinstance(packet, dict) and 'state' in packet:
+                        logging.debug(f'sent state {packet['state']}')
                         self.send(packet['state'], addr)
                     else:
                         logging.debug(f'sent {packet.tick}')

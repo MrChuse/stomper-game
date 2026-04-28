@@ -42,7 +42,7 @@ class Game:
         self.players.append(p)
 
     def update(self, actions: dict):
-        # print('tick', self.current_tick)
+        logging.debug(f'core.update {self.current_tick}')
         outgoing_actions = []
         for p_id, p_actions in actions.items():
             for action in p_actions:

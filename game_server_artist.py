@@ -27,7 +27,7 @@ class GameServerArtist:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.received_packets: deque[ServerPacket] = deque(maxlen=100)
+        self.received_packets: deque[ServerPacket] = deque(maxlen=settings.UPS)
         self.current_tick_packets: list[ServerPacket] = []
 
         self.last_sent_tick_time = time.perf_counter()
@@ -100,7 +100,7 @@ class GameServerArtist:
 
                 self.current_tick_packets.clear()
 
-            self.clock.tick(120)
+            self.clock.tick(settings.UPS)
         except KeyboardInterrupt:
             self.quit()
             raise
