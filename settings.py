@@ -1,5 +1,5 @@
 import logging
 
-PROFILER = True
-LOGGING_LEVEL = logging.DEBUG
+PROFILER = False
+LOGGING_LEVEL = logging.INFO
 UPS = 120
