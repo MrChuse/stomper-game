@@ -38,6 +38,8 @@ class Client(Connection):
                 logging.error('Cant find the server')
             except TimeoutError:
                 logging.error('Timeout')
+            except UnicodeDecodeError:
+                logging.error(f'Received trash: {res}')
         else:
             return
         if res == 'OK':
