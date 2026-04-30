@@ -40,7 +40,7 @@ class Client(Connection):
             except TimeoutError:
                 logging.error('Timeout')
             except UnicodeDecodeError:
-                logging.error(f'Received trash: {res}')
+                logging.error(f'Received trash')
         else:
             return
         if res == 'OK':
