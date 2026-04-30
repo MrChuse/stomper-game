@@ -51,6 +51,8 @@ class Client(Connection):
                 data, addr = self.recvstr()
             except TimeoutError:
                 pass
+            except UnicodeDecodeError:
+                logging.error(f'Received trash')
             else:
                 if data == 'exit':
                     self.quit()
