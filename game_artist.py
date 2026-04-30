@@ -10,12 +10,14 @@ import logging
 import pygame
 
 from back.core import SquareMoveGame as Game
+# from back.platform_game import PlatformJumpGame as Game
 from front.artist import Artist
+# from front.platform_artist import Artist
 from utils import Thread
 
 class GameArtist:
     def __init__(self, screen=None):
-        self.game = Game(True)
+        self.game = Game()
         self.game.create_random_player()
         self.artist = Artist(screen, self.game)
 
