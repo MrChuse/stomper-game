@@ -18,7 +18,7 @@ class GameServerArtist:
     def __init__(self, host='', screen=None):
         self.connection = Server(host)
         self.connection.clients.append('local') # bad
-        self.game = Game(True)
+        self.game = Game()
         self.game.create_random_player()
         self.connection.on_connect_callbacks.append(self.on_connect)
         self.connection.on_disconnect_callbacks.append(self.on_disconnect)

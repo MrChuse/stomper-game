@@ -19,7 +19,7 @@ from utils import Thread
 class GameClientArtist:
     def __init__(self, host='localhost', screen=None):
         self.connection = Client(host)
-        self.game = Game(False)
+        self.game = Game()
         self.artist = Artist(screen, self.game)
 
         self.clock = pygame.time.Clock()

@@ -31,7 +31,7 @@ WIDTH = 480
 HEIGHT = 360
 SIZE = 30
 class SquareMoveGame:
-    def __init__(self, is_server=True):
+    def __init__(self):
         self.current_tick = 0
         self.players: list[Player] = []
 

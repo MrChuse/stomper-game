@@ -12,7 +12,7 @@ from server import Server, ServerPacket
 class GameServerHeadless:
     def __init__(self):
         self.connection = Server()
-        self.game = Game(True)
+        self.game = Game()
 
         self.connection.on_connect_callbacks.append(self.on_connect)
         self.connection.on_disconnect_callbacks.append(self.on_disconnect)
