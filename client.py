@@ -32,7 +32,8 @@ class Client(Connection):
         self.sendstr('connect')
         for i in range(10):
             try:
-                res, addr = self.recvstr()
+                res, addr = self.recv()
+                res = res.decode('utf-8')
                 break
             except ConnectionResetError:
                 logging.error('Cant find the server')
