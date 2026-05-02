@@ -57,7 +57,7 @@ class GameServerHeadless:
                 self.game.update(actions_to_local)
                 self.current_tick_packets = []
                 if len(self.game.players) > 0:
-                    packet = ServerPacket(self.game.current_tick)
+                    packet = ServerPacket(self.game.current_tick-1)
                     packet.actions.update(actions_to_local)
                     self.connection.packets_to_remote.put(packet)
 
