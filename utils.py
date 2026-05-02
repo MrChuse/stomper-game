@@ -32,9 +32,9 @@ class Connection:
         self.thread.join()
 
     def send(self, data: bytes, addr=None):
-        logger.debug(f'Send: {data} -> {addr}')
         if addr is None:
             addr = (self.host, self.port)
+        logger.debug(f'Send: {data} -> {addr}')
         self.sock.sendto(data, addr)
 
     def sendstr(self, s: str, addr=None):
