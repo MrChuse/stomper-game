@@ -43,6 +43,8 @@ class GameServerHeadless:
                     break
 
             for packet in self.received_packets.copy():
+                if packet.tick < self.game.current_tick:
+                    self.received_packets.remove(packet)
                 if packet.tick == self.game.current_tick:
                     self.current_tick_packets.append(packet)
                     self.received_packets.remove(packet)
