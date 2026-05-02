@@ -15,7 +15,7 @@ class Connection:
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(1/1000)
+        self.sock.settimeout(1/30)
 
         # threading
         self.alive = True

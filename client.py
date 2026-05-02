@@ -32,12 +32,15 @@ class Client(Connection):
         self.sendstr('connect')
         for i in range(10):
             try:
-                res, addr = self.recvstr()
+                res, addr = self.recv()
+                res = res.decode('utf-8')
                 break
             except ConnectionResetError:
                 logging.error('Cant find the server')
             except TimeoutError:
                 logging.error('Timeout')
+            except UnicodeDecodeError:
+                logging.error(f'Received trash')
         else:
             return
         if res == 'OK':
@@ -48,6 +51,8 @@ class Client(Connection):
                 data, addr = self.recvstr()
             except TimeoutError:
                 pass
+            except UnicodeDecodeError:
+                logging.error(f'Received trash')
             else:
                 if data == 'exit':
                     self.quit()
