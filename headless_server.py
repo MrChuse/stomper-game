@@ -20,7 +20,7 @@ class GameServerHeadless:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.received_packets: deque[ServerPacket] = deque(maxlen=settings.UPS)
+        self.received_packets: deque[ServerPacket] = deque()
         self.current_tick_packets: list[ServerPacket] = []
 
         self.loop()
