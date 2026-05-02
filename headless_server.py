@@ -75,5 +75,4 @@ class GameServerHeadless:
             self.update()
 
 if __name__ == '__main__':
-    logging.basicConfig(level=settings.LOGGING_LEVEL)
     gsh = GameServerHeadless()

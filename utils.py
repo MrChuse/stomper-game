@@ -1,21 +1,9 @@
 import threading
 from queue import Queue
-import queue
 import socket
-from collections import deque
 import logging
 
-from back.core import Action, Player
-
-# class Queue(deque):
-#     def get(self, blocking):
-#         if len(self) == 0:
-#             raise queue.Empty
-#         return self.popleft()
-#     def put(self, x):
-#         return self.append(x)
-#     def shutdown(self):
-#         return
+logger = logging.getLogger(__name__)
 
 class Thread(threading.Thread):
     def __init__(self, t, *args):
@@ -44,7 +32,7 @@ class Connection:
         self.thread.join()
 
     def send(self, data: bytes, addr=None):
-        logging.debug(f'Send: {data} -> {addr}')
+        logger.debug(f'Send: {data} -> {addr}')
         if addr is None:
             addr = (self.host, self.port)
         self.sock.sendto(data, addr)
@@ -53,14 +41,12 @@ class Connection:
         self.send(s.encode('utf-8'), addr)
     
     def sendlistint(self, l: list[int], addr=None):
-        # print('Send', l)
-        # b = bytearray([len(l)]) + bytearray(l)
         s = ' '.join(map(str, l))
         self.sendstr(s, addr)
 
     def recv(self):
         data, addr = self.sock.recvfrom(1024)
-        logging.debug(f'Recv {data} <- {addr}')
+        logger.debug(f'Recv {data} <- {addr}')
         return data, addr
 
     def recvstr(self):

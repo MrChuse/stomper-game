@@ -72,7 +72,6 @@ class GameArtist:
 if __name__ == '__main__':
     if settings.PROFILER:
         yappi.start()
-    logging.basicConfig(level=settings.LOGGING_LEVEL)
     gsa = GameArtist()
     if settings.PROFILER:
         yappi.get_func_stats().print_all()
