@@ -15,7 +15,7 @@ logging.config.dictConfig({
     'version': 1,
     'formatters': {
         'default': {
-            'format': '%(asctime)s:%(levelname)s\t%(filename)s:%(lineno)s\t%(message)s'
+            'format': '%(asctime)s:%(levelname)s:%(name)s\t%(filename)s:%(lineno)s\t%(message)s'
         }
     },
     'handlers': {
@@ -39,7 +39,8 @@ logging.config.dictConfig({
         },
         'utils': {
             'level': 'DEBUG',
-            'handlers': ['file']
+            'handlers': ['file'],
+            'propagate': False
         }
     }
 })
