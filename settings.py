@@ -1,11 +1,16 @@
 from datetime import datetime
 import logging
 import logging.config
+import os
 
 PROFILER = False
 FPS = 60
 UPS = 60
 
+try:
+    os.mkdir('logs')
+except FileExistsError:
+    pass
 logging.config.dictConfig({
     'version': 1,
     'formatters': {
@@ -24,7 +29,7 @@ logging.config.dictConfig({
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'formatter': 'default',
-            'filename': f'log-{datetime.now():%Y-%m-%d-%H-%M-%S}.log'
+            'filename': f'logs/log-{datetime.now():%Y-%m-%d-%H-%M-%S}.log'
         }
     },
     'loggers': {
