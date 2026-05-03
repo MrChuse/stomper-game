@@ -41,7 +41,7 @@ class SquareMoveGame:
         self.players.append(p)
 
     def update(self, actions: dict):
-        logging.debug(f'core.update {self.current_tick}')
+        # logging.debug(f'core.update {self.current_tick}')
 
         for p_id, p_actions in actions.items():
             for action in p_actions:

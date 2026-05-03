@@ -7,8 +7,9 @@ pygame.freetype.init()
 from back.core import SquareMoveGame, Action, WIDTH, HEIGHT, SIZE
 
 class Artist(BaseViewPygame):
-    def __init__(self, screen=None, game: SquareMoveGame = None) -> None:
+    def __init__(self, screen=None, game: SquareMoveGame = None, tick_pos=None) -> None:
         self.game = game
+        self.tick_pos = tick_pos
         if screen is None:
             pygame.init()
             self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -19,20 +20,19 @@ class Artist(BaseViewPygame):
         self.running = True
         self.this_tick_actions = []
         self.time_delta = 0
+        self.predicted_ticks = ''
 
         self.font = pygame.freetype.SysFont('Segoe Print', 30)
 
     def show(self):
-        self.screen.fill('black')
-
         for p in self.game.players:
             pygame.draw.rect(self.screen, p.color, (p.x,p.y,SIZE,SIZE))
 
-        self.font.render_to(self.screen, (0, 0, 0, 0), str(self.game.current_tick), 'white')
+        self.font.render_to(self.screen, (*self.tick_pos, *(0, 0)), str(self.game.current_tick), 'white')
         if self.time_delta > 0:
             self.font.render_to(self.screen, (0, 30, 0, 0), str(round(self.time_delta, 2)) + ' ups', 'white')
-
-        pygame.display.flip()
+        if self.predicted_ticks != '':
+            self.font.render_to(self.screen, (0, 60, 0, 0), str(self.predicted_ticks) + ' it', 'white')
 
         self.this_tick_actions = []
         keys = pygame.key.get_pressed()
