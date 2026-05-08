@@ -23,6 +23,7 @@ class GameClientArtist:
         self.screen = screen
 
         self.connection = Client(host)
+        self.player_id = None
 
         self.server_state = Game()
         self.artist = Artist(screen, self.server_state, (WIDTH//2, 0))
@@ -31,6 +32,7 @@ class GameClientArtist:
         self.predicted_state = deepcopy(self.server_state)
         self.predicted_artist = Artist(screen, self.predicted_state, (0, 0))
         self.predicted_lock = Lock()
+        self.target_buffer_size = 35
 
         self.clock = pygame.time.Clock()
         self.running = True
@@ -80,11 +82,16 @@ class GameClientArtist:
         clock = pygame.time.Clock()
         while self.running:
             if len(self.sent_packets) < settings.UPS * 3:
+                
+                # this slows down the game if there's too many packets in queue and speeds up if too few
+                # this tries to set the queue size to settings.UPS. Probably need a way to make this buffer as little as possible
+                actual_ups = 2 * self.target_buffer_size - len(self.sent_packets)
                 with self.predicted_lock:
                     self.send_actions()
                     # print(f'in send_actions loop {self.predicted_state.current_tick}')
-                    self.predicted_state.update({0: self.predicted_artist.this_tick_actions})
-                    clock.tick(settings.UPS)
+                    if self.player_id is not None:
+                        self.predicted_state.update({self.player_id: self.predicted_artist.this_tick_actions})
+                    clock.tick(actual_ups)
 
     def collect_packets(self):
             # collects packets into self.received_packets
@@ -109,6 +116,8 @@ class GameClientArtist:
                                 # print(f'set current_tick to {self.game.current_tick} in state transfer')
                                 self.copy_server_state()
                                 # self.send_actions()
+                        elif 'player_id' in packet:
+                             self.player_id = packet['player_id']
                     else:
                         # print(f'put {packet.tick} into received packets')
                         self.received_packets.append(packet)
@@ -162,7 +171,8 @@ class GameClientArtist:
                         for packet in self.sent_packets:
                             actions = packet.actions
                             # print(f'in predict loop: {self.predicted_state.current_tick}, {packet.tick}')
-                            self.predicted_state.update({0: actions})
+                            if self.player_id is not None:
+                                self.predicted_state.update({self.player_id: actions})
                         self.predicted_artist.predicted_ticks = len(self.sent_packets)
                 cur_tick = time.perf_counter()
                 td = cur_tick - self.last_sent_tick_time

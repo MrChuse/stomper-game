@@ -30,7 +30,7 @@ class Client(Connection):
 
     def loop(self):
         self.sendstr('connect')
-        for i in range(10):
+        for i in range(200):
             try:
                 res, addr = self.recv()
                 res = res.decode('utf-8')
@@ -43,8 +43,10 @@ class Client(Connection):
                 logging.error(f'Received trash')
         else:
             return
-        if res == 'OK':
-            logging.info('Connection established')
+        if res.startswith('OK'):
+            ok, num = res.split()
+            logging.info(f'Connection established. Player number {num}')
+            self.packets_to_local.put({'player_id': int(num)})
 
         while self.alive:
             try:

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import logging
 
 from back.core import Action
-from utils import Connection
+from utils import Connection, Thread
 
 from traceback import print_exc
 
@@ -31,6 +31,7 @@ class Server(Connection):
         self.clients = []
         self.on_connect_callbacks = []
         self.on_disconnect_callbacks = []
+        self.send_thread = Thread(self.send_loop)
 
     def sendall(self, data):
         for c in self.clients:
@@ -43,6 +44,25 @@ class Server(Connection):
         super().quit()
         print("quit success")
 
+    def send_loop(self):
+        while self.alive:
+            try:
+                packet = self.packets_to_remote.get()
+            except queue.ShutDown:
+                return
+            except queue.Empty:
+                logging.error("Empty packets to remote: should be unreachable")
+                pass
+            else:
+                for addr in self.clients:
+                    if addr == 'local': continue
+                    if isinstance(packet, dict) and 'state' in packet:
+                        logging.debug(f'sent state {packet['state']}')
+                        self.send(packet['state'], addr)
+                    else:
+                        logging.debug(f'sent {packet.tick}')
+                        self.sendlistint(packet.to_list(), addr)
+
     def loop(self):
         self.sock.bind((self.host, self.port))
 
@@ -54,8 +74,9 @@ class Server(Connection):
             else:
                 try:
                     if data == b'connect':
+                        s = f'OK {len(self.clients)}'
                         self.clients.append(addr)
-                        self.sendstr('OK', addr)
+                        self.sendstr(s, addr)
                         
                         for f in self.on_connect_callbacks:
                             f()
@@ -93,19 +114,3 @@ class Server(Connection):
                             print_exc()
                 except queue.ShutDown:
                     return
-
-            try:
-                packet = self.packets_to_remote.get(False)
-            except queue.ShutDown:
-                return
-            except queue.Empty:
-                pass
-            else:
-                for addr in self.clients:
-                    if addr == 'local': continue
-                    if isinstance(packet, dict) and 'state' in packet:
-                        logging.debug(f'sent state {packet['state']}')
-                        self.send(packet['state'], addr)
-                    else:
-                        logging.debug(f'sent {packet.tick}')
-                        self.sendlistint(packet.to_list(), addr)
