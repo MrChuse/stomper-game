@@ -45,7 +45,7 @@ class Connection:
         self.sendstr(s, addr)
 
     def recv(self):
-        data, addr = self.sock.recvfrom(1024)
+        data, addr = self.sock.recvfrom(1500)
         logger.debug(f'Recv {data} <- {addr}')
         return data, addr
 
