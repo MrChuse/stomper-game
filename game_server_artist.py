@@ -15,14 +15,15 @@ from server import Server, ServerPacket
 from utils import Thread
 
 class GameServerArtist:
-    def __init__(self, host='', screen=None):
+    def __init__(self, host='', screen: pygame.Surface = None):
         self.connection = Server(host)
         self.connection.clients.append('local') # bad
+        self.screen = screen
         self.game = Game()
         self.game.create_random_player()
         self.connection.on_connect_callbacks.append(self.on_connect)
         self.connection.on_disconnect_callbacks.append(self.on_disconnect)
-        self.artist = Artist(screen, self.game)
+        self.artist = Artist(screen, self.game, (0, 0))
 
         self.clock = pygame.time.Clock()
         self.running = True
@@ -48,7 +49,9 @@ class GameServerArtist:
         clock = pygame.time.Clock()
         while self.running:
             pygame.display.set_caption(f'Stomper Game | {clock.get_fps():.1f}')
+            self.screen.fill('black')
             self.artist.show()
+            pygame.display.flip()
             if self.artist.running is False:
                 self.quit()
                 return
