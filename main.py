@@ -95,6 +95,20 @@ class LocalOnlinePickerScreen(Screen):
                                                  anchors={'top_target': self.client_button,
                                                           'left_target':self.host_button})
 
+    def check_client(self):
+        text = self.client_text_entry.text
+        if not text:
+            text = self.placeholder_ip
+        try:
+            socket.inet_aton(text)
+        except socket.error as e:
+            rect = pygame.Rect(self.surface.get_rect())
+            rect = rect.scale_by(0.5, 0.5)
+            UIMessageWindow(rect, f'{text} is an invalid IPv4 address')
+        else:
+            self.return_value = f'online client {text}'
+            self.is_running = False
+
     def process_events(self, event):
         super().process_events(event)
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -105,18 +119,11 @@ class LocalOnlinePickerScreen(Screen):
                 self.return_value = 'online host'
                 self.is_running = False
             elif event.ui_element == self.client_button:
-                text = self.client_text_entry.text
-                if not text:
-                    text = self.placeholder_ip
-                try:
-                    socket.inet_aton(text)
-                except socket.error as e:
-                    rect = pygame.Rect(self.surface.get_rect())
-                    rect = rect.scale_by(0.5, 0.5)
-                    UIMessageWindow(rect, f'{text} is an invalid IPv4 address')
-                else:
-                    self.return_value = f'online client {text}'
-                    self.is_running = False
+                self.check_client()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                # if self.client_text_entry.is_focused:
+                    self.check_client()
 
 def main():
     pygame.init()
