@@ -4,6 +4,8 @@ import socket
 import logging
 
 logger = logging.getLogger(__name__)
+logger_send = logging.getLogger(f'{__name__}.send')
+logger_recv = logging.getLogger(f'{__name__}.recv')
 
 class Thread(threading.Thread):
     def __init__(self, t, *args):
@@ -29,12 +31,11 @@ class Connection:
         self.alive = False
         self.packets_to_local.shutdown()
         self.packets_to_remote.shutdown()
-        self.thread.join()
 
     def send(self, data: bytes, addr=None):
         if addr is None:
             addr = (self.host, self.port)
-        logger.debug(f'Send: {data} -> {addr}')
+        logger_send.debug(f'Send: {data} -> {addr}')
         self.sock.sendto(data, addr)
 
     def sendstr(self, s: str, addr=None):
@@ -46,7 +47,7 @@ class Connection:
 
     def recv(self):
         data, addr = self.sock.recvfrom(1500)
-        logger.debug(f'Recv {data} <- {addr}')
+        logger_recv.debug(f'Recv {data} <- {addr}')
         return data, addr
 
     def recvstr(self):

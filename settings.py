@@ -30,17 +30,43 @@ logging.config.dictConfig({
             'class': 'logging.FileHandler',
             'formatter': 'default',
             'filename': f'logs/log-{datetime.now():%Y-%m-%d-%H-%M-%S}.log'
+        },
+        'file_conn': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'default',
+            'filename': f'logs/log-{datetime.now():%Y-%m-%d-%H-%M-%S}-conn.log'
+        },
+        'file_send': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'default',
+            'filename': f'logs/log-{datetime.now():%Y-%m-%d-%H-%M-%S}-send.log'
+        },
+        'file_recv': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'default',
+            'filename': f'logs/log-{datetime.now():%Y-%m-%d-%H-%M-%S}-recv.log'
         }
     },
     'loggers': {
         'root': {
             'level': 'INFO',
-            'handlers': ['console']
+            'handlers': ['console', 'file']
         },
         'utils': {
             'level': 'DEBUG',
-            'handlers': ['file'],
+            'handlers': ['file_conn'],
             'propagate': False
+        },
+        'utils.send': {
+            'level': 'DEBUG',
+            'handlers': ['file_send'],
+        },
+        'utils.recv': {
+            'level': 'DEBUG',
+            'handlers': ['file_recv'],
         }
     }
 })
