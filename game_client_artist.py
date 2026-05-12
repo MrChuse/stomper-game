@@ -14,7 +14,7 @@ import pygame
 
 from back.core import SquareMoveGame as Game, Player, WIDTH
 from front.artist import Artist
-from client import Client, ClientPacket
+from client import Client, ClientTickActions
 from server import ServerPacket
 from utils import Thread
 
@@ -38,7 +38,7 @@ class GameClientArtist:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.sent_packets: deque[ClientPacket] = deque()
+        self.sent_packets: deque[ClientTickActions] = deque()
         self.received_packets: deque[ServerPacket] = deque(maxlen=100)
         self.current_tick_packets: list[ServerPacket] = []
         self.last_sent_tick = -1
@@ -87,7 +87,7 @@ class GameClientArtist:
         clock = pygame.time.Clock()
         while self.running:
             if len(self.sent_packets) < settings.UPS * 3:
-                
+
                 # this slows down the game if there's too many packets in queue and speeds up if too few
                 # this tries to set the queue size to settings.UPS. Probably need a way to make this buffer as little as possible
                 actual_ups = 2 * self.target_buffer_size - len(self.sent_packets)
@@ -155,7 +155,7 @@ class GameClientArtist:
                     if already_sent_packet_for_this_tick:
                         return
                 logging.debug(f'put {self.predicted_state.current_tick} to packets_to_remote')
-                packet_to_remote = ClientPacket(self.predicted_state.current_tick)
+                packet_to_remote = ClientTickActions(self.predicted_state.current_tick)
                 packet_to_remote.actions.extend(self.predicted_artist.this_tick_actions)
                 self.sent_packets.append(packet_to_remote)
                 self.connection.packets_to_remote.put(packet_to_remote)

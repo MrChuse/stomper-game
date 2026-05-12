@@ -9,7 +9,7 @@ from back.core import Action
 from server import ServerPacket # avoiding circular imports
 
 @dataclass()
-class ClientPacket:
+class ClientTickActions:
     tick: int
     actions: list[Action] = field(init=False)
 
@@ -97,14 +97,14 @@ class Client(Connection):
                             pass # data should be exhausted by now
                         else:
                             logging.error(f'More data was present than needed to parse ServerPacket... IDK {data}')
-                        
+
                         self.packets_to_local.put(packet)
                         logging.debug(f'received {state_or_tick}')
                 except Exception as e:
                     logging.error(f"Exception..., {e}, {data}")
 
             try:
-                packet: ClientPacket = self.packets_to_remote.get(False)
+                packet: ClientTickActions = self.packets_to_remote.get(False)
             except queue.ShutDown:
                 return
             except queue.Empty:
