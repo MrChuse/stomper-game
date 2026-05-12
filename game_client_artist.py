@@ -24,6 +24,7 @@ class GameClientArtist:
 
         self.connection = Client(host)
         self.player_id = None
+        self.connection.on_disconnect_callbacks.append(self.on_disconnect)
 
         self.server_state = Game()
         self.artist = Artist(screen, self.server_state, (WIDTH//2, 0))
@@ -48,10 +49,13 @@ class GameClientArtist:
         self.send_actions_thread = Thread(self.send_actions_loop)
         self.update_artist()
 
+    def on_disconnect(self, player_id):
+        self.server_state.players.pop(player_id)
+
     def copy_server_state(self):
         self.predicted_state = deepcopy(self.server_state)
         self.predicted_artist.game = self.predicted_state
-        # print(f'copied server state to {self.predicted_state.current_tick}')
+        # logging.debug(f'copied server state to {self.predicted_state.current_tick}')
 
     def update_artist(self):
         clock = pygame.time.Clock()
@@ -62,7 +66,8 @@ class GameClientArtist:
             self.screen.fill('black')
             if self.show_server_state:
                  self.artist.show()
-            self.predicted_artist.show()
+            with self.predicted_lock:
+                self.predicted_artist.show()
             pygame.display.flip()
             # print('shown')
             if self.artist.running is False:
@@ -113,7 +118,7 @@ class GameClientArtist:
                                 self.server_state.players.clear()
                                 for b in itertools.batched(s[1:], 5):
                                     self.server_state.players.append(Player(b[0], b[1], pygame.Color(b[2], b[3], b[4])))
-                                # print(f'set current_tick to {self.game.current_tick} in state transfer')
+                                logging.debug(f'set current_tick to {self.server_state.current_tick} in state transfer')
                                 self.copy_server_state()
                                 # self.send_actions()
                         elif 'player_id' in packet:
@@ -144,11 +149,19 @@ class GameClientArtist:
             return actions_to_local
 
     def send_actions(self):
+            try:
+                if len(self.sent_packets) > 0:
+                    already_sent_packet_for_this_tick = self.predicted_state.current_tick <= self.sent_packets[-1].tick
+                    if already_sent_packet_for_this_tick:
+                        return
+                logging.debug(f'put {self.predicted_state.current_tick} to packets_to_remote')
                 packet_to_remote = ClientPacket(self.predicted_state.current_tick)
                 packet_to_remote.actions.extend(self.predicted_artist.this_tick_actions)
                 self.sent_packets.append(packet_to_remote)
                 self.connection.packets_to_remote.put(packet_to_remote)
                 self.last_sent_tick = self.predicted_state.current_tick
+            except queue.ShutDown:
+                self.quit()
 
     def update(self):
         try:
@@ -156,7 +169,11 @@ class GameClientArtist:
             actions_to_local = self.parse_packets()
             logging.debug(f'{actions_to_local}, {len(self.server_state.players)}')
 
-            if len(actions_to_local) == len(self.server_state.players):
+            all_good = True
+            for i in range(len(self.server_state.players)):
+                if i not in actions_to_local:
+                    all_good = False
+            if all_good:
                 with self.predicted_lock:
                     self.server_state.update(actions_to_local)
                     self.copy_server_state()
@@ -172,8 +189,11 @@ class GameClientArtist:
                             actions = packet.actions
                             # print(f'in predict loop: {self.predicted_state.current_tick}, {packet.tick}')
                             if self.player_id is not None:
+                                # logging.debug(f'applying packet {packet.tick} to state {self.predicted_state.current_tick}')
                                 self.predicted_state.update({self.player_id: actions})
                         self.predicted_artist.predicted_ticks = len(self.sent_packets)
+                        # if len(self.sent_packets) > 0:
+                        #     logging.debug(f"Simulated up to the tick {packet.tick}. Current tick: {self.predicted_state.current_tick}")
                 cur_tick = time.perf_counter()
                 td = cur_tick - self.last_sent_tick_time
                 if td > 0:

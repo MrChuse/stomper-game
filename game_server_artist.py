@@ -28,7 +28,7 @@ class GameServerArtist:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.received_packets: deque[ServerPacket] = deque(maxlen=settings.UPS)
+        self.received_packets: deque[ServerPacket] = deque(maxlen=100*settings.UPS)
         self.current_tick_packets: list[ServerPacket] = []
 
         self.last_sent_tick_time = time.perf_counter()
@@ -87,8 +87,12 @@ class GameServerArtist:
             for packet in self.current_tick_packets:
                 actions_to_local.update(packet.actions)
 
-            # print(actions_to_local, len(self.game.players))
-            if len(actions_to_local) == len(self.game.players):
+            logging.debug(f'actions: {actions_to_local}, {len(self.game.players)}')
+            all_good = True
+            for i in range(len(self.game.players)):
+                if i not in actions_to_local:
+                    all_good = False
+            if all_good:
                 self.game.update(actions_to_local)
 
                 cur_tick = time.perf_counter()
@@ -99,7 +103,11 @@ class GameServerArtist:
                 self.last_sent_tick_time = cur_tick
 
                 packet.actions.update(actions_to_local)
-                self.connection.packets_to_remote.put(packet)
+
+                try:
+                    self.connection.packets_to_remote.put(packet)
+                except queue.ShutDown:
+                    self.quit()
 
                 self.current_tick_packets.clear()
 

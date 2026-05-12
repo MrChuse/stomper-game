@@ -22,6 +22,10 @@ class ClientPacket:
         return res
 
 class Client(Connection):
+    def __init__(self, host='', port=50007):
+        super().__init__(host, port)
+        self.on_disconnect_callbacks = []
+
     def quit(self):
         logging.info('quit initialized')
         self.sendstr('exit')
@@ -63,6 +67,11 @@ class Client(Connection):
                     state_or_tick, *data = data.split(' ')
                     if state_or_tick == 'state':
                         self.packets_to_local.put({'state': data})
+                    elif state_or_tick == 'disconnect':
+                        player = int(data[0])
+                        for f in self.on_disconnect_callbacks:
+                            f(player)
+
                     else:
                         packet = ServerPacket(int(state_or_tick))
                         data = list(map(int, data))
@@ -90,7 +99,7 @@ class Client(Connection):
                         self.packets_to_local.put(packet)
                         logging.debug(f'received {state_or_tick}')
                 except Exception as e:
-                    logging.error("Exception...", e, data)
+                    logging.error(f"Exception..., {e}, {data}")
 
             try:
                 packet: ClientPacket = self.packets_to_remote.get(False)

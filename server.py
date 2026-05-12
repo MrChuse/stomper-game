@@ -56,12 +56,19 @@ class Server(Connection):
             else:
                 for addr in self.clients:
                     if addr == 'local': continue
-                    if isinstance(packet, dict) and 'state' in packet:
-                        logging.debug(f'sent state {packet['state']}')
-                        self.send(packet['state'], addr)
-                    else:
+                    if isinstance(packet, dict):
+                        if 'state' in packet:
+                            logging.debug(f'sent state {packet['state']}')
+                            self.send(packet['state'], addr)
+                        elif 'disconnected_player' in packet:
+                            self.sendstr(f'disconnect {packet["disconnected_player"]}', addr)
+                        else:
+                            raise ValueError(f'I dont understand this packet: {packet}')
+                    elif isinstance(packet, ServerPacket):
                         logging.debug(f'sent {packet.tick}')
                         self.sendlistint(packet.to_list(), addr)
+                    else:
+                        logging.debug(f'unsupported type: {type(packet)} {packet}')
 
     def loop(self):
         self.sock.bind((self.host, self.port))
@@ -87,7 +94,7 @@ class Server(Connection):
                         if addr in self.clients:
                             for f in self.on_disconnect_callbacks:
                                 f(self.clients.index(addr))
-                            self.packets_to_remote.put({'player': self.clients.index(addr), 'action': Action.DISCONNECT}) # bad
+                            self.packets_to_remote.put({'disconnected_player': self.clients.index(addr)}) # bad
                             self.clients.remove(addr)
                             print('Client', addr, 'disconnected')
                     else:
