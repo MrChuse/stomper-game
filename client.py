@@ -8,7 +8,7 @@ from back.core import Action
 
 from server import ServerPacket # avoiding circular imports
 
-@dataclass()
+@dataclass
 class ClientTickActions:
     tick: int
     actions: list[Action] = field(init=False)
@@ -17,9 +17,20 @@ class ClientTickActions:
         self.actions = []
 
     def to_list(self):
-        res = [self.tick]
+        res = [self.tick, len(self.actions)]
         for action in self.actions:
             res.append(action.value)
+        return res
+
+@dataclass
+class ClientPacket:
+    tick_actions: list[ClientTickActions]
+
+    def to_list(self):
+        res = [len(self.tick_actions)]
+        for ta in self.tick_actions:
+            l = ta.to_list()
+            res.extend(l)
         return res
 
 class Client(Connection):
