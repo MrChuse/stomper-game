@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import logging
 
 from back.core import Action
-from utils import Connection, Thread
+from utils import Connection, Thread, is_valid_uuid
 
 from traceback import print_exc
 
@@ -79,45 +79,53 @@ class Server(Connection):
             except TimeoutError:
                 pass
             else:
-                try:
-                    if data == b'connect':
-                        s = f'OK {len(self.clients)}'
-                        self.clients.append(addr)
-                        self.sendstr(s, addr)
-                        
-                        for f in self.on_connect_callbacks:
-                            f()
-
-                        # self.actions_to_remote.put({'player': len(self.clients), 'action': Action.CONNECT})
-                        print(f'Client {addr} connected')
-                    elif data == b'exit':
-                        if addr in self.clients:
-                            for f in self.on_disconnect_callbacks:
-                                f(self.clients.index(addr))
-                            self.packets_to_remote.put({'disconnected_player': self.clients.index(addr)}) # bad
-                            self.clients.remove(addr)
-                            print('Client', addr, 'disconnected')
-                    else:
+                    if addr not in self.clients:
                         try:
+                            data = data.decode()
+                        except UnicodeDecodeError as e:
+                            logging.error(e)
+                        if data.startswith('connect'):
+                            clients_uuid = data.split(' ')[-1]
+                            if is_valid_uuid(clients_uuid):
+                                s = f'OK {len(self.clients)}'
+                                self.clients.append(addr)
+                                self.sendstr(s, addr)
+                                for f in self.on_connect_callbacks:
+                                    f()
+                                logging.info(f'Client {addr} connected')
+                            else:
+                                s = "418 I'm a teapot"
+                                self.sendstr(s, addr)
+                                logging.info(f'{addr} tried to connect with {data}')
+                    else:
+                        if data == b'exit':
+                            if addr in self.clients:
+                                for f in self.on_disconnect_callbacks:
+                                    f(self.clients.index(addr))
+                                try:
+                                    self.packets_to_remote.put({'disconnected_player': self.clients.index(addr)}) # bad
+                                except queue.ShutDown:
+                                    return
+                                self.clients.remove(addr)
+                                print('Client', addr, 'disconnected')
+                        else:
                             try:
                                 player = self.clients.index(addr)
-                            except ValueError:
-                                print(f"This player is not found: {addr}")
-                                continue
-                            data = list(map(int, data.decode().split()))
-                            # # if data[0] == len(data) - 1:
-                            #     tick = data[1]
-                            #     actions = list(map(Action, data[2:]))
-                            tick = data[0]
-                            actions = list(map(Action, data[1:]))
-                            packet = ServerPacket(tick)
-                            packet.actions[player] = actions
-                            self.packets_to_local.put(packet)
-                            logging.debug(f'received {tick}')
-                            # else:
-                            #     print(f'ACHTUNG! len data was wrong: {data[0]} != {len(data)}-1')
-                        except Exception as e:
-                            print("Exception...", e, data)
-                            print_exc()
-                except queue.ShutDown:
-                    return
+                                data = list(map(int, data.decode().split()))
+                                # # if data[0] == len(data) - 1:
+                                #     tick = data[1]
+                                #     actions = list(map(Action, data[2:]))
+                                tick = data[0]
+                                actions = list(map(Action, data[1:]))
+                                packet = ServerPacket(tick)
+                                packet.actions[player] = actions
+                                try:
+                                    self.packets_to_local.put(packet)
+                                except queue.ShutDown:
+                                    return
+                                logging.debug(f'received {tick}')
+                                # else:
+                                #     print(f'ACHTUNG! len data was wrong: {data[0]} != {len(data)}-1')
+                            except Exception as e:
+                                logging.error("Exception...", e, data)
+                                print_exc()

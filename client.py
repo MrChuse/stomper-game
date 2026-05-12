@@ -1,6 +1,7 @@
 import queue
 from dataclasses import dataclass, field
 import logging
+import uuid
 
 from utils import Connection
 from back.core import Action
@@ -23,6 +24,7 @@ class ClientPacket:
 
 class Client(Connection):
     def __init__(self, host='', port=50007):
+        self.uuid = uuid.uuid4()
         super().__init__(host, port)
         self.on_disconnect_callbacks = []
 
@@ -33,7 +35,7 @@ class Client(Connection):
         logging.info('quit success')
 
     def loop(self):
-        self.sendstr('connect')
+        self.sendstr(f'connect {self.uuid}')
         for i in range(200):
             try:
                 res, addr = self.recv()

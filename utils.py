@@ -2,6 +2,8 @@ import threading
 from queue import Queue
 import socket
 import logging
+from uuid import UUID
+
 
 logger = logging.getLogger(__name__)
 logger_send = logging.getLogger(f'{__name__}.send')
@@ -56,3 +58,10 @@ class Connection:
 
     def loop(self):
         pass
+
+def is_valid_uuid(uuid: str, version=4):
+    try:
+        uuid_obj = UUID(uuid, version=version)
+    except ValueError:
+        return False
+    return str(uuid_obj) == uuid
