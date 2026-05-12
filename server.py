@@ -1,6 +1,8 @@
 import queue
 from dataclasses import dataclass, field
 import logging
+from collections.abc import Iterator
+from itertools import islice
 
 from back.core import Action
 from utils import Connection, Thread, is_valid_uuid
@@ -70,6 +72,14 @@ class Server(Connection):
                     else:
                         logging.debug(f'unsupported type: {type(packet)} {packet}')
 
+    def parse_tick_actions(self, it: Iterator, player: int):
+        tick = next(it)
+        length = next(it)
+        actions = list(map(Action, islice(it, length)))
+        packet = ServerPacket(tick)
+        packet.actions[player] = actions
+        return packet
+
     def loop(self):
         self.sock.bind((self.host, self.port))
 
@@ -112,20 +122,27 @@ class Server(Connection):
                             try:
                                 player = self.clients.index(addr)
                                 data = list(map(int, data.decode().split()))
-                                # # if data[0] == len(data) - 1:
-                                #     tick = data[1]
-                                #     actions = list(map(Action, data[2:]))
-                                tick = data[0]
-                                actions = list(map(Action, data[1:]))
-                                packet = ServerPacket(tick)
-                                packet.actions[player] = actions
+                                it = iter(data)
+
                                 try:
-                                    self.packets_to_local.put(packet)
-                                except queue.ShutDown:
-                                    return
-                                logging.debug(f'received {tick}')
-                                # else:
-                                #     print(f'ACHTUNG! len data was wrong: {data[0]} != {len(data)}-1')
+                                    received_ticks = []
+                                    length = next(it)
+                                    for i in range(length):
+                                        packet = self.parse_tick_actions(it, player)
+                                        try:
+                                            self.packets_to_local.put(packet)
+                                        except queue.ShutDown:
+                                            return
+                                        received_ticks.append(packet.tick)
+                                    logging.debug(f'received {received_ticks}')
+                                except StopIteration:
+                                    logging.error("Couldnt parse tick actions")
+                                try:
+                                    next(it)
+                                except StopIteration:
+                                    pass # good case
+                                else:
+                                    logging.error("Somehow more data was present than needed to parse tick actions")
                             except Exception as e:
-                                logging.error("Exception...", e, data)
+                                logging.error(f"Exception... {e}, {data}")
                                 print_exc()

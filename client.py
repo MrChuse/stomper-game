@@ -115,11 +115,11 @@ class Client(Connection):
                     logging.error(f"Exception..., {e}, {data}")
 
             try:
-                packet: ClientTickActions = self.packets_to_remote.get(False)
+                packet: ClientPacket = self.packets_to_remote.get(False)
             except queue.ShutDown:
                 return
             except queue.Empty:
                 pass
             else:
-                logging.debug(f'sent {packet.tick}')
+                logging.debug(f'sent {packet}')
                 self.sendlistint(packet.to_list())

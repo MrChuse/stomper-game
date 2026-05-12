@@ -38,6 +38,8 @@ class Connection:
         if addr is None:
             addr = (self.host, self.port)
         logger_send.debug(f'Send: {data} -> {addr}')
+        if len(data) > 1500:
+            raise ValueError(f"Tried to send data with len {len(data)}. Max is 1500.")
         self.sock.sendto(data, addr)
 
     def sendstr(self, s: str, addr=None):

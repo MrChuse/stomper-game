@@ -14,7 +14,7 @@ import pygame
 
 from back.core import SquareMoveGame as Game, Player, WIDTH
 from front.artist import Artist
-from client import Client, ClientTickActions
+from client import Client, ClientTickActions, ClientPacket
 from server import ServerPacket
 from utils import Thread
 
@@ -41,7 +41,6 @@ class GameClientArtist:
         self.sent_packets: deque[ClientTickActions] = deque()
         self.received_packets: deque[ServerPacket] = deque(maxlen=100)
         self.current_tick_packets: list[ServerPacket] = []
-        self.last_sent_tick = -1
         self.last_sent_tick_time = time.perf_counter()
         self.last_sent_tick_times = deque(maxlen=60)
 
@@ -155,11 +154,12 @@ class GameClientArtist:
                     if already_sent_packet_for_this_tick:
                         return
                 logging.debug(f'put {self.predicted_state.current_tick} to packets_to_remote')
-                packet_to_remote = ClientTickActions(self.predicted_state.current_tick)
-                packet_to_remote.actions.extend(self.predicted_artist.this_tick_actions)
-                self.sent_packets.append(packet_to_remote)
-                self.connection.packets_to_remote.put(packet_to_remote)
-                self.last_sent_tick = self.predicted_state.current_tick
+                tick_actions = ClientTickActions(self.predicted_state.current_tick)
+                tick_actions.actions.extend(self.predicted_artist.this_tick_actions)
+                self.sent_packets.append(tick_actions)
+
+                client_packet = ClientPacket(list(self.sent_packets))
+                self.connection.packets_to_remote.put(client_packet)
             except queue.ShutDown:
                 self.quit()
 
