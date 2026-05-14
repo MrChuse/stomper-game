@@ -16,10 +16,11 @@ from front.artist import Artist
 from utils import Thread
 
 class GameArtist:
-    def __init__(self, screen=None):
+    def __init__(self, screen: pygame.Surface = None):
         self.game = Game()
         self.game.create_random_player()
-        self.artist = Artist(screen, self.game)
+        self.screen = screen
+        self.artist = Artist(screen, self.game, (0, 0))
 
         self.clock = pygame.time.Clock()
         self.running = True
@@ -33,11 +34,13 @@ class GameArtist:
     def update_artist(self):
         clock = pygame.time.Clock()
         while self.running:
+            self.screen.fill('black')
             pygame.display.set_caption(f'Stomper Game | {clock.get_fps():.1f}')
             self.artist.show()
             if self.artist.running is False:
                 self.quit()
                 return
+            pygame.display.flip()
 
             for event in pygame.event.get():
                 self.artist.process_event(event)

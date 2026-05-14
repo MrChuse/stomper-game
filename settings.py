@@ -3,7 +3,7 @@ import logging
 import logging.config
 import os
 
-PROFILER = True
+PROFILER = False
 FPS = 60
 UPS = 60
 
