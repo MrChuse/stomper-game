@@ -202,7 +202,7 @@ class GameClientArtist:
                 self.last_sent_tick_time = cur_tick
                 self.current_tick_packets.clear()
 
-            self.clock.tick(settings.UPS)
+                self.clock.tick(settings.UPS)
         except KeyboardInterrupt:
             self.quit()
             raise

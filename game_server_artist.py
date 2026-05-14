@@ -69,24 +69,19 @@ class GameServerArtist:
                 self.artist.process_event(event)
             clock.tick(settings.FPS)
 
-    def update(self):
-        try:
-            actions_to_remote = self.artist.this_tick_actions
-
-            packet = ServerTickActions(self.game.current_tick)
-            packet.actions[0] = actions_to_remote
-            self.current_tick_packets.append(packet)
-
+    def collect_packets(self):
             while True:
                 try:
                     packet = self.connection.packets_to_local.get(False)
                     self.received_packets.append(packet)
                 except queue.Empty:
                     break
+                    # logging.error('queue.Empty: This should be impossible')
                 except queue.ShutDown:
                     self.quit()
                     return
 
+    def parse_packets(self):
             for packet in self.received_packets.copy():
                 if packet.tick < self.game.current_tick:
                     self.received_packets.remove(packet)
@@ -98,12 +93,9 @@ class GameServerArtist:
             for packet in self.current_tick_packets:
                 actions_to_local.update(packet.actions)
 
-            logging.debug(f'actions: {actions_to_local}, {len(self.game.players)}')
-            all_good = True
-            for i in range(len(self.game.players)):
-                if i not in actions_to_local:
-                    all_good = False
-            if all_good:
+            return actions_to_local 
+
+    def update_game(self, actions_to_local):
                 tick_actions = ServerTickActions(self.game.current_tick)
                 tick_actions.actions = actions_to_local
                 self.sent_packets.append(tick_actions)
@@ -125,7 +117,26 @@ class GameServerArtist:
 
                 self.current_tick_packets.clear()
 
-            self.clock.tick(settings.UPS)
+    def update(self):
+        try:
+            actions_to_remote = self.artist.this_tick_actions
+
+            packet = ServerTickActions(self.game.current_tick)
+            packet.actions[0] = actions_to_remote
+            self.current_tick_packets.append(packet)
+
+            self.collect_packets()
+            actions_to_local = self.parse_packets()
+
+            logging.debug(f'actions: {actions_to_local}, {len(self.game.players)}')
+            all_good = True
+            for i in range(len(self.game.players)):
+                if i not in actions_to_local:
+                    all_good = False
+            if all_good:
+                self.update_game(actions_to_local)
+
+                self.clock.tick(settings.UPS)
         except KeyboardInterrupt:
             self.quit()
             raise
