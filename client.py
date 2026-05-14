@@ -2,6 +2,7 @@ import queue
 from dataclasses import dataclass, field
 import logging
 import uuid
+from collections.abc import Iterator
 
 from utils import Connection
 from back.core import Action
@@ -45,6 +46,24 @@ class Client(Connection):
         super().quit()
         logging.info('quit success')
 
+    def parse_player_actions(self, it):
+        player = next(it)
+        length = next(it)
+        actions = []
+        for i in range(length):
+            a = next(it)
+            actions.append(Action(a))
+        return player, actions
+
+    def parse_server_tick_actions(self, it: Iterator):
+        tick = next(it)
+        packet = ServerTickActions(tick)
+        num_players = next(it)
+        for i in range(num_players):
+            player, actions = self.parse_player_actions(it)
+            packet.actions[player] = actions
+        return packet
+
     def loop(self):
         self.sendstr(f'connect {self.uuid}')
         for i in range(200):
@@ -86,30 +105,28 @@ class Client(Connection):
                             f(player)
 
                     else:
-                        packet = ServerTickActions(int(state_or_tick))
+                        length = int(state_or_tick)
                         data = list(map(int, data))
                         it = iter(data)
+
+                        parsed_packets = []
                         try:
-                            num_players = next(it)
-                            for i in range(num_players):
-                                player = next(it)
-                                length = next(it)
-                                actions = []
-                                for i in range(length):
-                                    a = next(it)
-                                    actions.append(Action(a))
-                                packet.actions[player] = actions
+                            for i in range(length):
+                                packet = self.parse_server_tick_actions(it)
+                                parsed_packets.append(packet)
                         except StopIteration as e:
                             logging.error(f'ServerPacket parsing went wrong: {e}, {data}')
                             continue
                         try:
                             next(it)
                         except StopIteration as e:
-                            pass # data should be exhausted by now
+                            pass # good case
                         else:
                             logging.error(f'More data was present than needed to parse ServerPacket... IDK {data}')
 
-                        self.packets_to_local.put(packet)
+                        # parsing complete and successful
+                        for packet in parsed_packets:
+                            self.packets_to_local.put(packet)
                         logging.debug(f'received {state_or_tick}')
                 except Exception as e:
                     logging.error(f"Exception..., {e}, {data}")

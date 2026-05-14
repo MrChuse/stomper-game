@@ -9,16 +9,24 @@ import logging
 
 import pygame
 
-from back.core import SquareMoveGame as Game
+from back.core import SquareMoveGame as Game, HEIGHT, WIDTH
 from front.artist import Artist
-from server import Server, ServerTickActions
+from server import Server, ServerTickActions, ServerPacket
 from utils import Thread
 
 class GameServerArtist:
     def __init__(self, host='', screen: pygame.Surface = None):
         self.connection = Server(host)
         self.connection.clients.append('local') # bad
-        self.screen = screen
+
+        if screen is None:
+            pygame.init()
+            self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+            self.created_screen = True
+        else:
+            self.screen = screen
+            self.created_screen = False
+
         self.game = Game()
         self.game.create_random_player()
         self.connection.on_connect_callbacks.append(self.on_connect)
@@ -31,6 +39,7 @@ class GameServerArtist:
         self.received_packets: deque[ServerTickActions] = deque(maxlen=100*settings.UPS)
         self.current_tick_packets: list[ServerTickActions] = []
 
+        self.sent_packets: deque[ServerTickActions] = deque(maxlen=10)
         self.last_sent_tick_time = time.perf_counter()
         self.last_sent_tick_times = deque(maxlen=60)
 
@@ -79,6 +88,8 @@ class GameServerArtist:
                     return
 
             for packet in self.received_packets.copy():
+                if packet.tick < self.game.current_tick:
+                    self.received_packets.remove(packet)
                 if packet.tick == self.game.current_tick:
                     self.current_tick_packets.append(packet)
                     self.received_packets.remove(packet)
@@ -93,6 +104,10 @@ class GameServerArtist:
                 if i not in actions_to_local:
                     all_good = False
             if all_good:
+                tick_actions = ServerTickActions(self.game.current_tick)
+                tick_actions.actions = actions_to_local
+                self.sent_packets.append(tick_actions)
+
                 self.game.update(actions_to_local)
 
                 cur_tick = time.perf_counter()
@@ -102,9 +117,8 @@ class GameServerArtist:
                     self.artist.time_delta = sum(self.last_sent_tick_times) / len(self.last_sent_tick_times)
                 self.last_sent_tick_time = cur_tick
 
-                packet.actions.update(actions_to_local)
-
                 try:
+                    packet = ServerPacket(list(self.sent_packets))
                     self.connection.packets_to_remote.put(packet)
                 except queue.ShutDown:
                     self.quit()

@@ -26,6 +26,16 @@ class ServerTickActions:
                 res.append(a.value)
         return res
 
+@dataclass
+class ServerPacket:
+    tick_actions: list[ServerTickActions]
+
+    def to_list(self):
+        res = [len(self.tick_actions)]
+        for ta in self.tick_actions:
+            l = ta.to_list()
+            res.extend(l)
+        return res
 
 class Server(Connection):
     def __init__(self, host='', port=50007):
@@ -66,8 +76,8 @@ class Server(Connection):
                             self.sendstr(f'disconnect {packet["disconnected_player"]}', addr)
                         else:
                             raise ValueError(f'I dont understand this packet: {packet}')
-                    elif isinstance(packet, ServerTickActions):
-                        logging.debug(f'sent {packet.tick}')
+                    elif isinstance(packet, ServerPacket):
+                        logging.debug(f'sent {[p.tick for p in packet.tick_actions]}')
                         self.sendlistint(packet.to_list(), addr)
                     else:
                         logging.debug(f'unsupported type: {type(packet)} {packet}')
