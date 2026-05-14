@@ -6,7 +6,7 @@ import uuid
 from utils import Connection
 from back.core import Action
 
-from server import ServerPacket # avoiding circular imports
+from server import ServerTickActions
 
 @dataclass
 class ClientTickActions:
@@ -86,7 +86,7 @@ class Client(Connection):
                             f(player)
 
                     else:
-                        packet = ServerPacket(int(state_or_tick))
+                        packet = ServerTickActions(int(state_or_tick))
                         data = list(map(int, data))
                         it = iter(data)
                         try:

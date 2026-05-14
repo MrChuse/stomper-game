@@ -10,7 +10,7 @@ from utils import Connection, Thread, is_valid_uuid
 from traceback import print_exc
 
 @dataclass
-class ServerPacket:
+class ServerTickActions:
     tick: int
     actions: dict[int, list[Action]] = field(init=False)
 
@@ -66,7 +66,7 @@ class Server(Connection):
                             self.sendstr(f'disconnect {packet["disconnected_player"]}', addr)
                         else:
                             raise ValueError(f'I dont understand this packet: {packet}')
-                    elif isinstance(packet, ServerPacket):
+                    elif isinstance(packet, ServerTickActions):
                         logging.debug(f'sent {packet.tick}')
                         self.sendlistint(packet.to_list(), addr)
                     else:
@@ -76,7 +76,7 @@ class Server(Connection):
         tick = next(it)
         length = next(it)
         actions = list(map(Action, islice(it, length)))
-        packet = ServerPacket(tick)
+        packet = ServerTickActions(tick)
         packet.actions[player] = actions
         return packet
 

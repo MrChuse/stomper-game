@@ -11,7 +11,7 @@ import pygame
 
 from back.core import SquareMoveGame as Game
 from front.artist import Artist
-from server import Server, ServerPacket
+from server import Server, ServerTickActions
 from utils import Thread
 
 class GameServerArtist:
@@ -28,8 +28,8 @@ class GameServerArtist:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.received_packets: deque[ServerPacket] = deque(maxlen=100*settings.UPS)
-        self.current_tick_packets: list[ServerPacket] = []
+        self.received_packets: deque[ServerTickActions] = deque(maxlen=100*settings.UPS)
+        self.current_tick_packets: list[ServerTickActions] = []
 
         self.last_sent_tick_time = time.perf_counter()
         self.last_sent_tick_times = deque(maxlen=60)
@@ -64,7 +64,7 @@ class GameServerArtist:
         try:
             actions_to_remote = self.artist.this_tick_actions
 
-            packet = ServerPacket(self.game.current_tick)
+            packet = ServerTickActions(self.game.current_tick)
             packet.actions[0] = actions_to_remote
             self.current_tick_packets.append(packet)
 

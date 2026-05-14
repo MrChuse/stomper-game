@@ -15,7 +15,7 @@ import pygame
 from back.core import SquareMoveGame as Game, Player, WIDTH
 from front.artist import Artist
 from client import Client, ClientTickActions, ClientPacket
-from server import ServerPacket
+from server import ServerTickActions
 from utils import Thread
 
 class GameClientArtist:
@@ -39,8 +39,8 @@ class GameClientArtist:
         self.running = True
 
         self.sent_packets: deque[ClientTickActions] = deque()
-        self.received_packets: deque[ServerPacket] = deque(maxlen=100)
-        self.current_tick_packets: list[ServerPacket] = []
+        self.received_packets: deque[ServerTickActions] = deque(maxlen=100)
+        self.current_tick_packets: list[ServerTickActions] = []
         self.last_sent_tick_time = time.perf_counter()
         self.last_sent_tick_times = deque(maxlen=60)
 

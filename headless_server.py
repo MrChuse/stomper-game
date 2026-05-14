@@ -7,7 +7,7 @@ import logging
 import pygame
 
 from back.core import SquareMoveGame as Game
-from server import Server, ServerPacket
+from server import Server, ServerTickActions
 
 class GameServerHeadless:
     def __init__(self):
@@ -20,8 +20,8 @@ class GameServerHeadless:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.received_packets: deque[ServerPacket] = deque()
-        self.current_tick_packets: list[ServerPacket] = []
+        self.received_packets: deque[ServerTickActions] = deque()
+        self.current_tick_packets: list[ServerTickActions] = []
 
         self.loop()
 
@@ -59,7 +59,7 @@ class GameServerHeadless:
                 self.game.update(actions_to_local)
                 self.current_tick_packets = []
                 if len(self.game.players) > 0:
-                    packet = ServerPacket(self.game.current_tick-1)
+                    packet = ServerTickActions(self.game.current_tick-1)
                     packet.actions.update(actions_to_local)
                     self.connection.packets_to_remote.put(packet)
 
